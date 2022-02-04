@@ -32,42 +32,50 @@
 (require 'helm)
 (require 'helm-source)
 
-(defvar helm-org-hop-headings-source nil
+(defvar helm-source-org-hop-headings nil
   "Helm source for `org-hop-headings'.")
 
-(defvar helm-org-hop-recent-source nil
+(defvar helm-source-org-hop-recent nil
   "Helm source for `org-hop-recent-list'.")
 
-(defvar helm-org-hop-marker-source nil
+(defvar helm-source-org-hop-marker nil
   "Helm source for `org-hop-marker-list'.")
 
 (defvar helm-org-hop-headings-actions
   '(("Hop to heading" . org-hop-to-marker))
-  "Default actions alist for `helm-org-hop-headings-source'.")
+  "Default actions alist for `helm-source-org-hop-headings'.")
 
 (defvar helm-org-hop-recent-actions
   '(("Hop to heading"           . org-hop-to-marker)
-    ("Remove heading from list" . org-hop-remove-recent))
-  "Default actions alist for `helm-org-hop-recent-source'.")
+    ("Remove heading from list" . helm-org-hop-remove-recent-multi))
+  "Default actions alist for `helm-source-org-hop-recent'.")
 
 (defvar helm-org-hop-marker-actions
   '(("Hop to marker"           . org-hop-to-marker)
-    ("Remove marker from list" . org-hop-remove-marker))
-  "Default actions alist for `helm-org-hop-marker-source'.")
+    ("Remove marker from list" . helm-org-hop-remove-marker-multi))
+  "Default actions alist for `helm-source-org-hop-marker'.")
+
+(defun helm-org-hop-remove-recent-multi (marker)
+  (dolist (entry (helm-marked-candidates))
+    (org-hop-remove-recent entry)))
+
+(defun helm-org-hop-remove-marker-multi (marker)
+  (dolist (entry (helm-marked-candidates))
+    (org-hop-remove-marker entry)))
 
 (defun helm-org-hop-build-sources (&optional force)
   (when force (org-hop-reset))
-  (setq helm-org-hop-recent-source
+  (setq helm-source-org-hop-recent
         (helm-build-sync-source "Recent Org headings: "
           :action 'helm-org-hop-recent-actions
           :candidates org-hop-recent-list))
 
-  (setq helm-org-hop-marker-source
+  (setq helm-source-org-hop-marker
         (helm-build-sync-source "Hop to marker: "
           :action 'helm-org-hop-marker-actions
           :candidates org-hop-marker-list))
 
-  (setq helm-org-hop-headings-source
+  (setq helm-source-org-hop-headings
         (helm-build-sync-source "Org headings: "
           :action 'helm-org-hop-headings-actions
           :candidates (org-hop-headings force))))
@@ -78,10 +86,10 @@
 With C-u, force refresh all lists."
   (interactive "P")
   (helm-org-hop-build-sources arg)
-  (helm :buffer "helm-org-hop"
-        :sources '(helm-org-hop-recent-source
-                   helm-org-hop-marker-source
-                   helm-org-hop-headings-source)))
+  (helm :buffer "*helm-org-hop*"
+        :sources '(helm-source-org-hop-recent
+                   helm-source-org-hop-marker
+                   helm-source-org-hop-headings)))
 
 
 (provide 'helm-org-hop)
