@@ -42,26 +42,79 @@
   "Helm source for `org-hop-marker-list'.")
 
 (defvar helm-org-hop-headings-actions
-  '(("Hop to heading" . org-hop-to-marker))
+  '(("Hop to heading          " . org-hop-to-marker)
+    ("Store link to heading"    . helm-org-hop-headings-store-link)
+    ("Insert link to heading"   . helm-org-hop-headings-insert-link))
   "Default actions alist for `helm-source-org-hop-headings'.")
 
 (defvar helm-org-hop-recent-actions
   '(("Hop to heading"           . org-hop-to-marker)
+    ("Store link to heading"    . helm-org-hop-headings-store-link)
+    ("Insert link to heading"   . helm-org-hop-headings-insert-link)
     ("Remove heading from list" . helm-org-hop-remove-recent-multi))
   "Default actions alist for `helm-source-org-hop-recent'.")
 
 (defvar helm-org-hop-marker-actions
   '(("Hop to marker"           . org-hop-to-marker)
+    ("Store link to marker"    . helm-org-hop-marker-store-link)
+    ("Insert link to marker"   . helm-org-hop-marker-insert-link)
     ("Remove marker from list" . helm-org-hop-remove-marker-multi))
   "Default actions alist for `helm-source-org-hop-marker'.")
+
+
+;;;; Headings actions
+
+(defun helm-org-hop-headings-store-link (marker)
+  (let ((position (point)))
+    (with-current-buffer (marker-buffer marker)
+      (goto-char (marker-position marker))
+      (call-interactively 'org-store-link))
+    (goto-char position)))
+
+(defun helm-org-hop-headings-insert-link (marker)
+  (let ((position (point)))
+    (with-current-buffer (marker-buffer marker)
+      (goto-char (marker-position marker))
+      (call-interactively 'org-store-link))
+    (goto-char position)
+    (org-insert-all-links 1 "" "")))
 
 (defun helm-org-hop-remove-recent-multi (marker)
   (dolist (entry (helm-marked-candidates))
     (org-hop-remove-recent entry)))
 
+
+;;;;; Markers actions
+
+(defun helm-org-hop-store-marker-link ()
+  (let ((file (buffer-file-name))
+        (line (line-number-at-pos)))
+    (add-to-list 'org-stored-links
+                 `(,(format "file:%s::%s" file line)
+                   ,(format "%s::%s" (file-name-nondirectory file) line))
+                 t)))
+
+(defun helm-org-hop-marker-store-link (marker)
+  (let ((position (point)))
+    (with-current-buffer (marker-buffer marker)
+      (goto-char (marker-position marker))
+      (helm-org-hop-store-marker-link))
+    (goto-char position)))
+
+(defun helm-org-hop-marker-insert-link (marker)
+  (let ((position (point)))
+    (with-current-buffer (marker-buffer marker)
+      (goto-char (marker-position marker))
+      (helm-org-hop-store-marker-link))
+    (goto-char position)
+    (org-insert-all-links 1 "" "")))
+
 (defun helm-org-hop-remove-marker-multi (marker)
   (dolist (entry (helm-marked-candidates))
     (org-hop-remove-marker entry)))
+
+
+;;;; Helm build sources
 
 (defun helm-org-hop-build-sources (&optional force)
   (when force (org-hop-reset))

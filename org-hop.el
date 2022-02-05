@@ -35,7 +35,7 @@
 
 (defgroup org-hop nil
   "Group for `org-hop' customizations."
-  :group 'org-hop)
+  :group 'org)
 
 (defcustom org-hop-org-files 'buffers
   "This variable controls the `org-hop-org-files' function.
@@ -71,6 +71,11 @@ Alternatively, this variable can be a custom list of Org files."
 
 (defcustom org-hop-mark-ring-push t
   "If non-nil, push current position into the mark ring before to hop."
+  :group 'org-hop
+  :type 'boolean)
+
+(defcustom org-hop-switch-to-buffer-other-window t
+  "If non-nil, switch to buffer in another window."
   :group 'org-hop
   :type 'boolean)
 
@@ -236,7 +241,9 @@ This is intended to be called by `run-with-idle-timer' in `org-hop-recent-mode'.
 (defun org-hop-to-marker (marker)
   "Hop to MARKER in buffer."
   (if org-hop-mark-ring-push (org-mark-ring-push))
-  (switch-to-buffer (marker-buffer marker))
+  (if org-hop-switch-to-buffer-other-window
+      (switch-to-buffer-other-window (marker-buffer marker))
+    (switch-to-buffer (marker-buffer marker)))
   (goto-char (marker-position marker))
   (when (and (eq major-mode 'org-mode) (org-at-heading-p))
     (org-hop-add-recent)
