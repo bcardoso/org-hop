@@ -37,15 +37,21 @@
   "Group for `org-hop' customizations."
   :group 'org)
 
-(defcustom org-hop-org-files 'buffers
-  "This variable controls the `org-hop-org-files' function.
-Default values are:
+(defcustom org-hop-files 'buffers
+  "Which Org files should be scanned by `org-hop-headings-scan'.
+This variable controls the `org-hop-files' function. Default values are:
 
   'agenda          list of Org agenda files
   'buffers         list of open Org buffers
   'org-files-list  list of Org agenda files + open Org buffers
 
 Alternatively, this variable can be a custom list of Org files."
+  :group 'org-hop
+  :type 'sexp)
+
+(defcustom org-hop-files-main nil
+  "List of Org files that must always be scanned for headings.
+This list is appended to `org-hop-files'."
   :group 'org-hop
   :type 'sexp)
 
@@ -117,28 +123,32 @@ Alternatively, this variable can be a custom list of Org files."
       (cl-pushnew (file-truename file) files-truename-list))
     (remove nil (delete-dups (reverse files-truename-list)))))
 
-(defun org-hop-org-files ()
+(defun org-hop-files ()
   "Return a list of Org files using their truenames.
-This function is controlled by the `org-hop-org-files' variable."
-  (org-hop-files-truename
-   (cond
-    ;; list of Org agenda files
-    ((eq org-hop-org-files 'agenda)
-     (org-agenda-files))
+This function is controlled by the `org-hop-files' variable."
+  (let ((org-files
+         (cond
+          ;; 'agenda - list of Org agenda files
+          ((eq org-hop-files 'agenda)
+           (org-agenda-files))
 
-    ;; list of open Org buffers
-    ((or (eq org-hop-org-files 'buffers) (eq org-hop-org-files nil))
-     (let ((org-buffers))
-       (dolist (buffer (org-buffer-list 'files) (remove nil org-buffers))
-         (cl-pushnew (buffer-file-name buffer) org-buffers))))
+          ;; 'buffers - list of open Org buffers
+          ((or (eq org-hop-files 'buffers) (eq org-hop-files nil))
+           (let ((org-buffers))
+             (dolist (buffer (org-buffer-list 'files))
+               (cl-pushnew (buffer-file-name buffer) org-buffers))
+             (reverse (remove nil org-buffers))))
 
-    ;; list of Org agenda files + open Org buffers
-    ((eq org-hop-org-files 'org-files-list)
-     (org-files-list))
+          ;; 'org-files-list - list of Org agenda files + open Org buffers
+          ((eq org-hop-files 'org-files-list)
+           (org-files-list))
 
-    ;; custom user list
-    (t
-     org-hop-org-files))))
+          ;; custom user list
+          (t
+           org-hop-files))))
+    (org-hop-files-truename (if org-hop-files-main
+                                (append org-hop-files-main org-files)
+                              org-files))))
 
 (defun org-hop-get-heading (&optional org-file)
   "Get Org heading at point."
@@ -170,7 +180,7 @@ This function is controlled by the `org-hop-org-files' variable."
     (reverse org-file-headings)))
 
 (defun org-hop-headings-scan (&optional force)
-  "Scan the files returned by `org-hop-org-files' for Org headings.
+  "Scan the files returned by `org-hop-files' for Org headings.
 
 The Org headings are stored in `org-hop-cache'.
 The scan only happens when files' modification times are greater
@@ -182,7 +192,7 @@ When FORCE is non-nil, force the scan of all files.
 See `org-hop-headings-file'."
   (let ((org-hop-cache-new nil)
         (org-file-modified-time nil))
-    (dolist (org-file (org-hop-org-files))
+    (dolist (org-file (org-hop-files))
       (setq org-file-modified-time (org-hop-file-attr-modified org-file))
       (cond
        ((or force ;; re-read org-file headings
@@ -240,17 +250,21 @@ This is intended to be called by `run-with-idle-timer' in `org-hop-recent-mode'.
 
 (defun org-hop-to-marker (marker)
   "Hop to MARKER in buffer."
-  (if org-hop-mark-ring-push (org-mark-ring-push))
-  (if org-hop-switch-to-buffer-other-window
-      (switch-to-buffer-other-window (marker-buffer marker))
-    (switch-to-buffer (marker-buffer marker)))
-  (goto-char (marker-position marker))
-  (when (and (eq major-mode 'org-mode) (org-at-heading-p))
-    (org-hop-add-recent)
-    (org-show-context)
-    (re-search-backward org-heading-regexp nil t)
-    (org-show-entry)
-    (org-show-children)))
+  (if (not (marker-buffer marker))
+      (progn
+        (org-hop-remove-recent marker)
+        (message "Buffer vanished."))
+    (if org-hop-mark-ring-push (org-mark-ring-push))
+    (if org-hop-switch-to-buffer-other-window
+        (switch-to-buffer-other-window (marker-buffer marker))
+      (switch-to-buffer (marker-buffer marker)))
+    (goto-char (marker-position marker))
+    (when (and (eq major-mode 'org-mode) (org-at-heading-p))
+      (org-hop-add-recent)
+      (org-show-context)
+      (re-search-backward org-heading-regexp nil t)
+      (org-show-entry)
+      (org-show-children))))
 
 (defun org-hop-remove-recent (marker)
   "Remove Org heading from `org-hop-recent-list'."
