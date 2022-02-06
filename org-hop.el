@@ -230,20 +230,40 @@ See `org-hop-headings-file'."
     (setq org-hop-recent-list
           (cons heading (remove heading org-hop-recent-list)))))
 
-(defun org-hop-add-recent-when-idle ()
+(defun org-hop-add-heading-to-recent (&optional add-marker verbose)
   "When under an Org heading, add it to `org-hop-recent-list'.
-This is intended to be called by `run-with-idle-timer' in `org-hop-recent-mode'."
+If VERBOSE is non-nil, show messages.
+
+If ADD-MARKER is non-nil, add current marker to `org-hop-marker-list' if position is not under an Org heading."
   (interactive)
   (let ((position (point)))
-    (when (and (eq major-mode 'org-mode)
-               (buffer-file-name) ; NOTE: ignores indirect/capture buffers
-               (or (org-at-heading-p)
-                   (and (re-search-backward org-heading-regexp nil t)
-                        (org-at-heading-p))))
-      ;; NOTE: move to eol to make sure point-marker gets the right heading
-      (goto-char (point-at-eol))
-      (org-hop-add-recent))
+    (cond ((and (eq major-mode 'org-mode)
+                (buffer-file-name) ; NOTE: ignores indirect/capture buffers
+                (or (org-at-heading-p)
+                    (and (re-search-backward org-heading-regexp nil t)
+                         (org-at-heading-p))))
+           ;; NOTE: move to eol to make sure marker gets the right heading
+           (goto-char (point-at-eol))
+           (org-hop-add-recent)
+           (if verbose
+               (message (format "Saved %s" (car (org-hop-get-heading))))))
+          (add-marker
+           (org-hop-add-marker)))
     (goto-char position)))
+
+(defun org-hop-add-marker ()
+  "Save current point-marker to `org-hop-marker-list'."
+  (interactive)
+  (let ((buffer (if (buffer-file-name)
+                    (file-name-nondirectory (buffer-file-name))
+                  (buffer-name)))
+        (line-number (line-number-at-pos))
+        (line (thing-at-point 'line)))
+    (cl-pushnew `(,(replace-regexp-in-string
+                    "\n" "" (format "%s:%s %s" buffer line-number line))
+                  . ,(point-marker))
+                org-hop-marker-list)
+    (message (format "Saved marker %s:%s" buffer line-number))))
 
 
 ;;;;; Actions on markers
@@ -315,19 +335,9 @@ With C-u, force refresh all lists."
     (org-hop-to-marker marker)))
 
 ;;;###autoload
-(defun org-hop-add-marker ()
-  "Save current point-marker to `org-hop-marker-list'."
+(defun org-hop-add-heading-or-marker ()
   (interactive)
-  (let ((buffer (if (buffer-file-name)
-                    (file-name-nondirectory (buffer-file-name))
-                  (buffer-name)))
-        (line-number (line-number-at-pos))
-        (line (thing-at-point 'line)))
-    (cl-pushnew `(,(replace-regexp-in-string
-                    "\n" "" (format "%s:%s %s" buffer line-number line))
-                  . ,(point-marker))
-                org-hop-marker-list)
-    (message (format "Saved marker %s:%s" buffer line-number))))
+  (org-hop-add-heading-to-recent t t))
 
 (define-minor-mode org-hop-recent-mode
   "Toggle org-hop-recent mode.
@@ -337,8 +347,8 @@ When idle, add current Org heading to `org-hop-recent-list'."
   :group 'org-hop
   (if org-hop-recent-mode
       (run-with-idle-timer org-hop-recent-idle-interval t
-                           #'org-hop-add-recent-when-idle)
-    (cancel-function-timers #'org-hop-add-recent-when-idle)))
+                           #'org-hop-add-heading-to-recent)
+    (cancel-function-timers #'org-hop-add-heading-to-recent)))
 
 
 (provide 'org-hop)
