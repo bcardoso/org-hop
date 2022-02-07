@@ -200,6 +200,8 @@ See `org-hop-headings-file'."
             (> org-file-modified-time org-hop-last-scan)
             (not (assoc org-file org-hop-cache))
             (not (find-buffer-visiting org-file)))
+        (message (format "Updating cache for %s..."
+                         (file-name-nondirectory org-file)))
         (cl-pushnew `(,org-file . ,(list (org-hop-headings-file org-file)))
                     org-hop-cache-new  :test #'equal))
        (t         ;; or to just copy them from cache

@@ -53,47 +53,55 @@
   '(("Hop to heading"                   . org-hop-to-marker)
     ("Store link to heading  `C-c l`"   . helm-org-hop-headings-store-link)
     ("Insert link to heading `C-c C-l`" . helm-org-hop-headings-insert-link))
-  "Default actions alist for `helm-org-hop-headings-source'."
+  "Default actions alist for `helm-source-org-hop-headings'."
   :group 'helm-org-hop
   :type '(alist :key-type string :value-type function))
 
 (defcustom helm-org-hop-recent-actions
   '(("Hop to heading"                   . org-hop-to-marker)
-    ("Store link to heading `C-c l`"    . helm-org-hop-headings-store-link)
-    ("Insert link to heading `C-c C-l`" . helm-org-hop-headings-insert-link)
+    ("Store link to heading    `C-c l`"    . helm-org-hop-headings-store-link)
+    ("Insert link to heading   `C-c C-l`" . helm-org-hop-headings-insert-link)
     ("Remove heading from list `M-D`"   . helm-org-hop-remove-recent))
-  "Default actions alist for `helm-org-hop-recent-source'."
+  "Default actions alist for `helm-source-org-hop-recent'."
   :group 'helm-org-hop
   :type '(alist :key-type string :value-type function))
 
 (defcustom helm-org-hop-marker-actions
   '(("Hop to marker"                    . org-hop-to-marker)
-    ("Store link to marker `C-c l`"     . helm-org-hop-marker-store-link)
-    ("Insert link to marker `C-c C-l`"  . helm-org-hop-marker-insert-link)
+    ("Store link to marker    `C-c l`"     . helm-org-hop-marker-store-link)
+    ("Insert link to marker   `C-c C-l`"  . helm-org-hop-marker-insert-link)
     ("Remove marker from list `M-D`"    . helm-org-hop-remove-marker))
-  "Default actions alist for `helm-org-hop-marker-source'."
+  "Default actions alist for `helm-source-org-hop-marker'."
   :group 'helm-org-hop
   :type '(alist :key-type string :value-type function))
 
 (defcustom helm-org-hop-capture-actions
   '(("Capture note"            . helm-org-hop-capture-note))
-  "Default actions alist for `helm-org-hop-capture-source'."
+  "Default actions alist for `helm-source-org-hop-capture'."
   :group 'helm-org-hop
   :type '(alist :key-type string :value-type function))
+
+(defcustom helm-org-hop-default-sources '(helm-source-org-hop-recent
+                                          helm-source-org-hop-marker
+                                          helm-source-org-hop-headings
+                                          helm-source-org-hop-capture)
+  "Default sources list used in `helm-org-hop'."
+  :group 'helm-org-hop
+  :type '(repeat (choice symbol)))
 
 
 ;;;; Variables
 
-(defvar helm-org-hop-headings-source nil
+(defvar helm-source-org-hop-headings nil
   "Helm source for `org-hop-headings'.")
 
-(defvar helm-org-hop-recent-source nil
+(defvar helm-source-org-hop-recent nil
   "Helm source for `org-hop-recent-list'.")
 
-(defvar helm-org-hop-marker-source nil
+(defvar helm-source-org-hop-marker nil
   "Helm source for `org-hop-marker-list'.")
 
-(defvar helm-org-hop-capture-source nil
+(defvar helm-source-org-hop-capture nil
   "Helm source for note capturing.")
 
 
@@ -224,7 +232,7 @@
     (define-key map (kbd "C-c l")   'helm-org-hop-run-headings-store-link)
     (define-key map (kbd "C-c C-l") 'helm-org-hop-run-headings-insert-link)
     map)
-  "Keymap for `helm-org-hop-headings-source'.")
+  "Keymap for `helm-source-org-hop-headings'.")
 
 (defvar helm-org-hop-recent-map
   (let ((map (make-sparse-keymap)))
@@ -233,7 +241,7 @@
     (define-key map (kbd "C-c C-l") 'helm-org-hop-run-headings-insert-link)
     (define-key map (kbd "M-D")     'helm-org-hop-run-remove-recent)
     map)
-  "Keymap for `helm-org-hop-recent-source'.")
+  "Keymap for `helm-source-org-hop-recent'.")
 
 (defvar helm-org-hop-marker-map
   (let ((map (make-sparse-keymap)))
@@ -242,29 +250,29 @@
     (define-key map (kbd "C-c C-l") 'helm-org-hop-run-marker-insert-link)
     (define-key map (kbd "M-D")     'helm-org-hop-run-remove-marker)
     map)
-  "Keymap for `helm-org-hop-marker-source'.")
+  "Keymap for `helm-source-org-hop-marker'.")
 
 (defun helm-org-hop-build-sources (&optional force)
   (when force (org-hop-reset))
-  (setq helm-org-hop-recent-source
+  (setq helm-source-org-hop-recent
         (helm-build-sync-source "Recent Org headings: "
           :action 'helm-org-hop-recent-actions
           :keymap helm-org-hop-recent-map
           :candidates org-hop-recent-list))
 
-  (setq helm-org-hop-marker-source
+  (setq helm-source-org-hop-marker
         (helm-build-sync-source "Hop to marker: "
           :action 'helm-org-hop-marker-actions
           :keymap helm-org-hop-marker-map
           :candidates org-hop-marker-list))
 
-  (setq helm-org-hop-headings-source
+  (setq helm-source-org-hop-headings
         (helm-build-sync-source "Org headings: "
           :action 'helm-org-hop-headings-actions
           :keymap helm-org-hop-headings-map
           :candidates (org-hop-headings force)))
 
-  (setq helm-org-hop-capture-source
+  (setq helm-source-org-hop-capture
         (helm-build-dummy-source "Create note"
           :action 'helm-org-hop-capture-actions)))
 
@@ -275,10 +283,7 @@ With C-u, force refresh all lists."
   (interactive "P")
   (helm-org-hop-build-sources arg)
   (helm :buffer "*helm-org-hop*"
-        :sources '(helm-org-hop-recent-source
-                   helm-org-hop-marker-source
-                   helm-org-hop-headings-source
-                   helm-org-hop-capture-source)))
+        :sources helm-org-hop-default-sources))
 
 
 (provide 'helm-org-hop)
