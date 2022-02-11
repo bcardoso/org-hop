@@ -58,19 +58,19 @@
   :type '(alist :key-type string :value-type function))
 
 (defcustom helm-org-hop-recent-actions
-  '(("Hop to heading"                   . org-hop-to-marker)
-    ("Store link to heading    `C-c l`"    . helm-org-hop-headings-store-link)
+  '(("Hop to heading"                     . org-hop-to-marker)
+    ("Store link to heading    `C-c l`"   . helm-org-hop-headings-store-link)
     ("Insert link to heading   `C-c C-l`" . helm-org-hop-headings-insert-link)
-    ("Remove heading from list `M-D`"   . helm-org-hop-remove-recent))
+    ("Remove heading from list `M-D`"     . helm-org-hop-remove-recent))
   "Default actions alist for `helm-source-org-hop-recent'."
   :group 'helm-org-hop
   :type '(alist :key-type string :value-type function))
 
 (defcustom helm-org-hop-marker-actions
-  '(("Hop to marker"                    . org-hop-to-marker)
-    ("Store link to marker    `C-c l`"     . helm-org-hop-marker-store-link)
-    ("Insert link to marker   `C-c C-l`"  . helm-org-hop-marker-insert-link)
-    ("Remove marker from list `M-D`"    . helm-org-hop-remove-marker))
+  '(("Hop to marker"                     . org-hop-to-marker)
+    ("Store link to marker    `C-c l`"   . helm-org-hop-marker-store-link)
+    ("Insert link to marker   `C-c C-l`" . helm-org-hop-marker-insert-link)
+    ("Remove marker from list `M-D`"     . helm-org-hop-remove-marker))
   "Default actions alist for `helm-source-org-hop-marker'."
   :group 'helm-org-hop
   :type '(alist :key-type string :value-type function))
@@ -114,7 +114,7 @@
           (org-hop-remove-recent entry)
         (org-hop-remove-marker entry)))
     (if (> num 1)
-        (message (format "Removed %s entries from %s list" num type)))))
+        (message (format "Removed %s entries from %s list." num type)))))
 
 (defun helm-org-hop-insert-link (type marker)
   (let ((org-link-file-path-type 'absolute)

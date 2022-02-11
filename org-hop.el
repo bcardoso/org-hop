@@ -337,9 +337,10 @@ With C-u, force refresh all lists."
     (org-hop-to-marker marker)))
 
 ;;;###autoload
-(defun org-hop-add-heading-or-marker ()
-  (interactive)
-  (org-hop-add-heading-to-recent t t))
+(defun org-hop-add-heading-or-marker (&optional arg)
+  (interactive "P")
+  (if arg (org-hop-add-marker)
+    (org-hop-add-heading-to-recent t t)))
 
 (define-minor-mode org-hop-recent-mode
   "Toggle org-hop-recent mode.
