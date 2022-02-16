@@ -1,0 +1,83 @@
+#+AUTHOR: Bruno Cardoso <cardoso.bc@gmail.com>
+#+DATE: 2022-02-01
+#+STARTUP: indent content
+
+* org-hop
+
+An interface to hop to Org headings and markers using completing-read.
+
+Alternatively, =helm-org-hop= provides a richer interface to =org-hop=.
+
+** Installation
+
+Clone this repo and add it to your =load-path=:
+
+#+begin_src emacs-lisp
+(add-to-list 'load-path "/path/to/org-hop")
+(require 'org-hop)
+
+;; optional helm interface
+(require 'helm-org-hop)
+#+end_src
+
+Or, with use-package + straight.el:
+
+#+begin_src emacs-lisp
+(use-package org-hop
+  :straight (org-hop :host github :repo "bcardoso/org-hop"
+                     :files ("org-hop.el"))
+  :bind ("C-c h" . org-hop)
+  :config
+  (org-hop-recent-mode +1))
+
+;; optional helm interface
+(use-package helm-org-hop
+  :straight (helm-org-hop :host github :repo "bcardoso/org-hop"
+                          :files ("helm-org-hop.el"))
+  :bind ("C-c j" . helm-org-hop))
+#+end_src
+
+
+** Usage
+
+Just run with =M-x org-hop= or with the suggested binding =C-c h=.
+
+Or, if you are a Helm user, =M-x helm-org-hop= or =C-c j=.
+
+Additionally, you can store markers to any file or buffer with =M-x org-hop-add-marker= or =M-x org-hop-add-heading-or-marker=.
+
+With the =helm-org-hop= interface, besides hopping, you can store/insert a link to a heading or marker, and remove it from the recent list.
+
+The =org-hop-recent-mode= keeps track of visited headings: the ones you hop to, and the ones you spend some time in (see =org-hop-recent-idle-interval=).
+
+The recent headings and markers are shown at the top of the general headings list.
+
+
+** Customization
+
+The main customizable variables are acessible at:
+
+- =M-x customize-group RET org-hop=
+- =M-x customize-group RET helm-org-hop=
+
+
+By default, =org-hop= will scan all open Org buffers. You can edit the variables =org-hop-files= and =org-hop-files-main= to a set of specific files:
+
+#+begin_src emacs-lisp
+;; the list of open Org buffers (default)
+(setq org-hop-files 'buffers)
+
+;; the list of Org agenda files
+(setq org-hop-files 'agenda)
+
+;; the list of Org agenda files + open Org buffers
+(setq org-hop-files 'org-files-list)
+
+;; a custom list of Org files
+(setq org-hop-files '("x.org" "y.org" "z.org"))
+
+;; Org agenda files + custom list
+(setq org-hop-files      'agenda
+      org-hop-files-main '("x.org" "y.org"))
+#+end_src
+
