@@ -49,7 +49,7 @@ Alternatively, this variable can be a custom list of Org files."
   :group 'org-hop
   :type 'sexp)
 
-(defcustom org-hop-files-main nil
+(defcustom org-hop-files-extra nil
   "List of Org files that must always be scanned for headings.
 This list is appended to `org-hop-files'."
   :group 'org-hop
@@ -105,7 +105,7 @@ This list is appended to `org-hop-files'."
 
 (defun org-hop-reset ()
   "Reset lists."
-  (setq org-hop-cache nil
+  (setq org-hop-cache       nil
         org-hop-recent-list nil
         org-hop-marker-list nil))
 
@@ -146,8 +146,8 @@ This function is controlled by the `org-hop-files' variable."
           ;; custom user list
           (t
            org-hop-files))))
-    (org-hop-files-truename (if org-hop-files-main
-                                (append org-hop-files-main org-files)
+    (org-hop-files-truename (if org-hop-files-extra
+                                (append org-hop-files-extra org-files)
                               org-files))))
 
 (defun org-hop-get-heading (&optional org-file)
@@ -343,7 +343,7 @@ With C-u, force refresh all lists."
     (org-hop-add-heading-to-recent t t)))
 
 (define-minor-mode org-hop-recent-mode
-  "Toggle org-hop-recent mode.
+  "Toggle org-hop-recent-mode.
 When idle, add current Org heading to `org-hop-recent-list'."
   :init-value nil
   :lighter nil
