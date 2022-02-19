@@ -283,6 +283,7 @@ With C-u, force refresh all lists."
   (interactive "P")
   (helm-org-hop-build-sources arg)
   (helm :buffer "*helm-org-hop*"
+        :ff-transformer-show-only-basename nil
         :sources helm-org-hop-default-sources))
 
 
