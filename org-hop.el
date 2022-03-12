@@ -85,6 +85,13 @@ This list is appended to `org-hop-files'."
   :group 'org-hop
   :type 'boolean)
 
+(defcustom org-hop-recenter nil
+  "If nil, center point in selected window and maybe redisplay frame.
+With a numeric value, recenter putting point on screen line
+relative to the selected window. See `recenter'."
+  :group 'org-hop
+  :type 'integer)
+
 
 ;;;; Variables
 
@@ -204,7 +211,7 @@ See `org-hop-headings-file'."
                          (file-name-nondirectory org-file)))
         (cl-pushnew `(,org-file . ,(list (org-hop-headings-file org-file)))
                     org-hop-cache-new  :test #'equal))
-       (t         ;; or to just copy them from cache
+       (t         ;; or just copy them from cache
         (cl-pushnew (assoc org-file org-hop-cache)
                     org-hop-cache-new  :test #'equal))))
     (setq org-hop-cache org-hop-cache-new)
@@ -283,10 +290,11 @@ If ADD-MARKER is non-nil, add current marker to `org-hop-marker-list' if positio
     (goto-char (marker-position marker))
     (when (and (eq major-mode 'org-mode) (org-at-heading-p))
       (org-hop-add-recent)
-      (org-show-context)
       (re-search-backward org-heading-regexp nil t)
+      (org-show-context)
       (org-show-entry)
-      (org-show-children))))
+      (org-show-children)
+      (recenter org-hop-recenter))))
 
 (defun org-hop-remove-recent (marker)
   "Remove Org heading from `org-hop-recent-list'."
