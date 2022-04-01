@@ -257,10 +257,10 @@ If ADD-MARKER is non-nil, add current marker to `org-hop-marker-list' if positio
            (if verbose
                (message (format "Saved %s" (car (org-hop-get-heading))))))
           (add-marker
-           (org-hop-add-marker)))
+           (org-hop-add-marker verbose)))
     (goto-char position)))
 
-(defun org-hop-add-marker ()
+(defun org-hop-add-marker (&optional verbose)
   "Save current point-marker to `org-hop-marker-list'."
   (interactive)
   (let ((buffer (if (buffer-file-name)
@@ -272,7 +272,8 @@ If ADD-MARKER is non-nil, add current marker to `org-hop-marker-list' if positio
                     "\n" "" (format "%s:%s %s" buffer line-number line))
                   . ,(point-marker))
                 org-hop-marker-list)
-    (message (format "Saved marker %s:%s" buffer line-number))))
+    (when (or verbose (called-interactively-p 'any))
+      (message (format "Saved marker %s:%s" buffer line-number)))))
 
 
 ;;;;; Actions on markers
