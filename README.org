@@ -101,3 +101,6 @@ By default, =org-hop= will scan all open Org buffers. You can also edit the vari
                                          helm-source-org-hop-headings))
     #+end_src
 
+- minad's [[https://github.com/minad/consult][consult]] package provides the commands =consult-org-heading= and =consult-org-agenda= for narrowing and jumping to Org headings.
+
+
