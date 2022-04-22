@@ -55,6 +55,11 @@ This list is appended to `org-hop-files'."
   :group 'org-hop
   :type 'sexp)
 
+(defcustom org-hop-files-ignore nil
+  "List of ignored Org files."
+  :group 'org-hop
+  :type 'sexp)
+
 (defcustom org-hop-headings-with-filename t
   "If non-nil, display Org file name before headings."
   :group 'org-hop
@@ -128,7 +133,10 @@ relative to the selected window. See `recenter'."
   (let ((files-truename-list nil))
     (dolist (file files)
       (cl-pushnew (file-truename file) files-truename-list))
-    (remove nil (delete-dups (reverse files-truename-list)))))
+    (cl-set-difference
+     (remove nil (delete-dups (reverse files-truename-list)))
+     (mapcar 'file-truename org-hop-files-ignore)
+     :test #'equal)))
 
 (defun org-hop-files ()
   "Return a list of Org files using their truenames.
