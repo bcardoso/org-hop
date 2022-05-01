@@ -168,18 +168,23 @@ This function is controlled by the `org-hop-files' variable."
 (defun org-hop-get-heading (&optional org-file)
   "Get Org heading at point."
   (interactive)
-  (let ((org-filename (file-name-nondirectory
-                       (or org-file (buffer-file-name))))
+  (let ((org-filename (or org-file (buffer-file-name)))
+        (props (cadr (org-element-at-point-no-context)))
         (tags (org-get-tags)))
-    (identity `(,(concat (org-format-outline-path
-                          (org-get-outline-path t t)
-                          org-hop-headings-width
-                          (if org-hop-headings-with-filename
-                              (format "%s:" org-filename))
-                          "/")
-                         (if (and org-hop-headings-with-tags tags)
-                             (format " %s" (org-make-tag-string tags))))
-                . ,(point-marker)))))
+    `(,(concat (org-format-outline-path
+                (org-get-outline-path t t)
+                org-hop-headings-width
+                (if org-hop-headings-with-filename
+                    (format "%s:" (file-name-nondirectory org-filename)))
+                "/")
+               (if (and org-hop-headings-with-tags tags)
+                   (format " %s" (org-make-tag-string tags))))
+      (:file      ,org-filename
+       :begin     ,(plist-get props :begin)
+       :end       ,(plist-get props :end)
+       :id        ,(plist-get props :ID)
+       :custom_id ,(plist-get props :CUSTOM_ID)
+       :tags      ,tags))))
 
 (defun org-hop-headings-file (org-file)
   "Return a list of Org headings from ORG-FILE."
