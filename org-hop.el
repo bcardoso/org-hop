@@ -265,8 +265,7 @@ When FORCE is non-nil, force the scan of all files."
                              :test #'equal :key #'car :from-end t))
   ;; move heading to the beginning of recent list
   (setq org-hop-recent-list
-        (cons heading (cl-delete heading org-hop-recent-list
-                                 :test #'equal :key #'car :from-end t))))
+        (cons heading (delete heading org-hop-recent-list))))
 
 (defun org-hop-add-heading-to-recent-list (&optional add-marker verbose)
   "When under an Org heading, add it to `org-hop-recent-list'.
@@ -303,38 +302,51 @@ if position is not under an Org heading."
 
 ;;;;; Actions
 
-(defun org-hop-to-entry (entry)
-  "Hop to ENTRY in buffer."
-  (let* ((type   (plist-get (car entry) :type))
-         (marker (plist-get (car entry) :marker))
-         (file   (plist-get (car entry) :file))
-         (line   (plist-get (car entry) :line))
+(defun org-hop-get-coordinates (candidate)
+  "Return coordinates to hop to CANDIDATE."
+  (let* ((type   (plist-get (car candidate) :type))
+         (marker (plist-get (car candidate) :marker))
+         (file   (plist-get (car candidate) :file))
+         (line   (plist-get (car candidate) :line))
          (buffer (or (marker-buffer marker)
                      (find-buffer-visiting file)
-                     (find-file-noselect file))))
-    (if (not buffer)
-        (progn
-          (if (equal (plist-get (car entry) :type) "marker")
-              (org-hop-remove-recent-marker entry)
-            (org-hop-remove-recent-heading entry))
-          (message "Buffer vanished."))
-      (if org-hop-mark-ring-push
-          (org-mark-ring-push))
+                     (find-file-noselect file)))
+         (char   (marker-position marker)))
+    (if buffer
+        `(:type ,type :buffer ,buffer :line ,line :char ,char)
+      (if (equal type "marker")
+          (org-hop-remove-recent-marker candidate)
+        (org-hop-remove-recent-heading candidate))
+      (message "Buffer %s vanished." buffer)
+      nil)))
+
+(defun org-hop-goto-char-or-line (char line)
+  "If CHAR is non-nil, go to char. Else, go to line."
+  (if char (goto-char char)
+    (goto-line line)))
+
+(defun org-hop-to-entry (candidate)
+  "Hop to entry CANDIDATE in buffer."
+  (let* ((entry  (org-hop-get-coordinates candidate))
+         (buffer (plist-get entry :buffer))
+         (char   (plist-get entry :char))
+         (line   (plist-get entry :line)))
+    (when entry
+      (if org-hop-mark-ring-push (org-mark-ring-push))
       (if org-hop-switch-to-buffer-other-window
           (switch-to-buffer-other-window buffer)
         (switch-to-buffer buffer))
-      (if (marker-position marker)
-          (goto-char (marker-position marker))
-        (goto-line line))
+      (org-hop-goto-char-or-line char line)
+      ;; post-hop actions
       (cond ((and (eq major-mode 'org-mode) (org-at-heading-p))
-             (org-hop-remove-recent-heading entry)
+             (org-hop-remove-recent-heading candidate)
              (org-hop-add-heading (org-hop-get-heading))
              (goto-char (point-at-bol))
              (org-show-context)
              (org-show-entry)
              (org-show-children))
             (t
-             (org-hop-remove-recent-marker entry)
+             (org-hop-remove-recent-marker candidate)
              (org-hop-add-marker-to-list)))
       (recenter org-hop-recenter))))
 

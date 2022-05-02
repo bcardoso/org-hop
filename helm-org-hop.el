@@ -107,41 +107,47 @@
 
 ;;;; Actions
 
-(defun helm-org-hop-remove (type marker)
+(defun helm-org-hop-remove (type)
   (let ((num (length (helm-marked-candidates))))
-    (dolist (entry (helm-marked-candidates))
+    (dolist (item (helm-marked-candidates))
       (if (eq type 'heading)
-          (org-hop-remove-recent-heading entry)
-        (org-hop-remove-recent-marker entry)))
+          (org-hop-remove-recent-heading item)
+        (org-hop-remove-recent-marker item)))
     (if (> num 1)
         (message (format "Removed %s entries from %s list." num type)))))
 
-(defun helm-org-hop-insert-link (type marker)
+(defun helm-org-hop-insert-link (type)
   (let ((org-link-file-path-type 'absolute)
-        (position (point))
+        (point (point))
         (num (length (helm-marked-candidates))))
-    (dolist (entry (reverse (helm-marked-candidates)))
-      (with-current-buffer (marker-buffer entry)
-        (goto-char (marker-position entry))
-        (let ((inhibit-message t))
-          (if (eq type 'heading)
-              (call-interactively 'org-store-link)
-            (helm-org-hop-store-marker-link)))))
-    (goto-char position)
+    (dolist (item (reverse (helm-marked-candidates)))
+      (let ((entry (org-hop-get-coordinates item)))
+        (when entry
+          (with-current-buffer (plist-get entry :buffer)
+            (org-hop-goto-char-or-line (plist-get entry :char)
+                                       (plist-get entry :line))
+            (let ((inhibit-message t))
+              (if (eq type 'heading)
+                  (call-interactively 'org-store-link)
+                (helm-org-hop-store-marker-link)))))))
+    (goto-char point)
     (if (> num 1)
         (org-insert-all-links num "- " "\n")
       (org-insert-all-links 1 "" ""))))
 
-(defun helm-org-hop-store-link (type marker)
-  (let ((position (point))
+(defun helm-org-hop-store-link (type)
+  (let ((point (point))
         (num (length (helm-marked-candidates))))
-    (dolist (entry (helm-marked-candidates))
-      (with-current-buffer (marker-buffer entry)
-        (goto-char (marker-position entry))
-        (if (eq type 'heading)
-            (call-interactively 'org-store-link)
-          (helm-org-hop-store-marker-link))))
-    (goto-char position)
+    (dolist (item (helm-marked-candidates))
+      (let ((entry (org-hop-get-coordinates item)))
+        (when entry
+          (with-current-buffer (plist-get entry :buffer)
+            (org-hop-goto-char-or-line (plist-get entry :char)
+                                       (plist-get entry :line))
+            (if (eq type 'heading)
+                (call-interactively 'org-store-link)
+              (helm-org-hop-store-marker-link))))))
+    (goto-char point)
     (if (> num 1)
         (message (format "Stored %s links" num)))))
 
@@ -159,26 +165,26 @@
 
 ;;;;; Headings actions
 
-(defun helm-org-hop-headings-store-link (marker)
-  (helm-org-hop-store-link 'heading marker))
+(defun helm-org-hop-headings-store-link (candidate)
+  (helm-org-hop-store-link 'heading))
 
-(defun helm-org-hop-headings-insert-link (marker)
-  (helm-org-hop-insert-link 'heading marker))
+(defun helm-org-hop-headings-insert-link (candidate)
+  (helm-org-hop-insert-link 'heading))
 
-(defun helm-org-hop-remove-recent-heading (marker)
-  (helm-org-hop-remove 'heading marker))
+(defun helm-org-hop-remove-recent-heading (candidate)
+  (helm-org-hop-remove 'heading))
 
 
 ;;;;; Markers actions
 
-(defun helm-org-hop-marker-store-link (marker)
-  (helm-org-hop-store-link 'marker marker))
+(defun helm-org-hop-marker-store-link (candidate)
+  (helm-org-hop-store-link 'marker))
 
-(defun helm-org-hop-marker-insert-link (marker)
-  (helm-org-hop-insert-link 'marker marker))
+(defun helm-org-hop-marker-insert-link (candidate)
+  (helm-org-hop-insert-link 'marker))
 
-(defun helm-org-hop-remove-recent-marker (marker)
-  (helm-org-hop-remove 'marker marker))
+(defun helm-org-hop-remove-recent-marker (candidate)
+  (helm-org-hop-remove 'marker))
 
 
 ;;;;; Capture actions
