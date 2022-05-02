@@ -107,7 +107,7 @@ relative to the selected window. See `recenter'."
   "Time of the last `org-hop-cache'. See `org-hop-headings-scan'.")
 
 (defvar org-hop-recent-list nil
-  "List of Org headings recently visited. See `org-hop-add-recent'.")
+  "List of Org headings recently visited. See `org-hop-add-heading'.")
 
 (defvar org-hop-marker-list nil
   "List of saved point-markers. See `org-hop-add-marker-to-list'.")
@@ -242,7 +242,7 @@ When FORCE is non-nil, force the scan of all files."
        ;; or just copy them from cache
        (t
         (cl-pushnew (assoc org-file org-hop-cache)
-                    org-hop-cache-new  :test #'equal))))
+                    org-hop-cache-new :test #'equal))))
     (setq org-hop-cache org-hop-cache-new)
     (setq org-hop-last-scan (string-to-number (format-time-string "%s")))))
 
@@ -257,15 +257,16 @@ When FORCE is non-nil, force the scan of all files."
 
 ;;;; Recent Org headings
 
-(defun org-hop-add-recent ()
+(defun org-hop-add-heading (heading)
   "Add Org heading to `org-hop-recent-list'."
-  (let ((heading (org-hop-get-heading)))
-    ;; NOTE: always remove duplicate keys
-    (setq org-hop-recent-list (cl-remove-duplicates
-                               org-hop-recent-list
-                               :test #'equal :key #'cdr :from-end t))
-    (setq org-hop-recent-list
-          (cons heading (remove heading org-hop-recent-list)))))
+  ;; NOTE: always remove duplicate keys
+  (setq org-hop-recent-list (cl-remove-duplicates
+                             org-hop-recent-list
+                             :test #'equal :key #'car :from-end t))
+  ;; move heading to the beginning of recent list
+  (setq org-hop-recent-list
+        (cons heading (cl-delete heading org-hop-recent-list
+                                 :test #'equal :key #'car :from-end t))))
 
 (defun org-hop-add-heading-to-recent-list (&optional add-marker verbose)
   "When under an Org heading, add it to `org-hop-recent-list'.
@@ -282,7 +283,7 @@ if position is not under an Org heading."
                          (org-at-heading-p))))
            ;; NOTE: move to eol to make sure marker gets the right heading
            (goto-char (point-at-eol))
-           (org-hop-add-recent)
+           (org-hop-add-heading (org-hop-get-heading))
            (if verbose
                (message (format "Saved %s" (car (org-hop-get-heading))))))
           (add-marker
@@ -308,10 +309,9 @@ if position is not under an Org heading."
          (marker (plist-get (car entry) :marker))
          (file   (plist-get (car entry) :file))
          (line   (plist-get (car entry) :line))
-         (buffer (if marker
-                     (marker-buffer marker)
-                   (or (find-buffer-visiting file)
-                       (find-file-noselect file)))))
+         (buffer (or (marker-buffer marker)
+                     (find-buffer-visiting file)
+                     (find-file-noselect file))))
     (if (not buffer)
         (progn
           (if (equal (plist-get (car entry) :type) "marker")
@@ -323,15 +323,19 @@ if position is not under an Org heading."
       (if org-hop-switch-to-buffer-other-window
           (switch-to-buffer-other-window buffer)
         (switch-to-buffer buffer))
-      (if marker
+      (if (marker-position marker)
           (goto-char (marker-position marker))
         (goto-line line))
-      (when (and (eq major-mode 'org-mode) (org-at-heading-p))
-        (org-hop-add-recent)
-        (re-search-backward org-heading-regexp nil t)
-        (org-show-context)
-        (org-show-entry)
-        (org-show-children))
+      (cond ((and (eq major-mode 'org-mode) (org-at-heading-p))
+             (org-hop-remove-recent-heading entry)
+             (org-hop-add-heading (org-hop-get-heading))
+             (goto-char (point-at-bol))
+             (org-show-context)
+             (org-show-entry)
+             (org-show-children))
+            (t
+             (org-hop-remove-recent-marker entry)
+             (org-hop-add-marker-to-list)))
       (recenter org-hop-recenter))))
 
 
@@ -341,7 +345,8 @@ if position is not under an Org heading."
   "Remove an item from a recent list."
   `(let ((entry (rassoc ,item ,from-list)))
      (setq ,from-list (remove entry ,from-list))
-     (message (format "Removed from recent list: %s" (car entry)))))
+     (when (called-interactively-p 'any)
+       (message (format "Removed from recent list: %s" (car entry))))))
 
 (defun org-hop-remove-recent-heading (item)
   (org-hop-remove-recent item org-hop-recent-list))
