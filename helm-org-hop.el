@@ -110,11 +110,12 @@
 (defun helm-org-hop-remove (type)
   "Remove candidates in variable `helm-marked-candidates' from recent list.
 Argument TYPE indicates if candidate is a 'heading or 'marker."
-  (let ((num (length (helm-marked-candidates))))
+  (let* ((num (length (helm-marked-candidates)))
+         (verbose (eq num 1)))
     (dolist (item (helm-marked-candidates))
       (if (eq type 'heading)
-          (org-hop-remove-recent-heading item)
-        (org-hop-remove-recent-marker item)))
+          (org-hop-remove-recent-heading item verbose)
+        (org-hop-remove-recent-marker item verbose)))
     (if (> num 1)
         (message (format "Removed %s entries from %s list." num type)))))
 

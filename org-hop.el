@@ -370,20 +370,20 @@ If VERBOSE is non-nil, show messages."
 
 ;;;; Remove items from recent lists
 
-(defmacro org-hop-remove-recent (item list)
+(defmacro org-hop-remove-recent (item list &optional verbose)
   "Remove an ITEM from a recent from LIST."
   `(let ((entry (rassoc ,item ,list)))
      (setq ,list (remove entry ,list))
-     (when (called-interactively-p 'any)
+     (when (or ,verbose (called-interactively-p 'any))
        (message (format "Removed from recent list: %s" (car entry))))))
 
-(defun org-hop-remove-recent-heading (item)
+(defun org-hop-remove-recent-heading (item &optional verbose)
   "Remove ITEM from recent headings list."
-  (org-hop-remove-recent item org-hop-headings-list))
+  (org-hop-remove-recent item org-hop-headings-list verbose))
 
-(defun org-hop-remove-recent-marker (item)
+(defun org-hop-remove-recent-marker (item &optional verbose)
   "Remove ITEM from recent marker list."
-  (org-hop-remove-recent item org-hop-markers-list))
+  (org-hop-remove-recent item org-hop-markers-list verbose))
 
 (defmacro org-hop-remove-from-recent (recent-list &optional arg)
   "Remove an item from a RECENT-LIST using `completing-read'.
