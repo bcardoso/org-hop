@@ -4,7 +4,7 @@
 
 ;; Author: Bruno Cardoso <cardoso.bc@gmail.com>
 ;; URL: https://github.com/bcardoso/org-hop
-;; Version: 0.1
+;; Version: 0.2
 ;; Package-Requires: ((emacs "27.2"))
 
 ;; This file is NOT part of GNU Emacs.
@@ -28,6 +28,7 @@
 
 ;;; Code:
 
+(require 'org)
 (require 'org-hop)
 (require 'helm)
 (require 'helm-source)
@@ -175,14 +176,17 @@ Argument TYPE indicates if candidate is a 'heading or 'marker."
 
 (defun helm-org-hop-headings-store-link (&optional candidate)
   "Helm action to store an Org link to CANDIDATE."
+  (ignore candidate)
   (helm-org-hop-store-link 'heading))
 
 (defun helm-org-hop-headings-insert-link (&optional candidate)
   "Helm action to insert an Org link to CANDIDATE."
+  (ignore candidate)
   (helm-org-hop-insert-link 'heading))
 
 (defun helm-org-hop-remove-recent-heading (&optional candidate)
   "Helm action to remove CANDIDATE from recent list."
+  (ignore candidate)
   (helm-org-hop-remove 'heading))
 
 
@@ -190,14 +194,17 @@ Argument TYPE indicates if candidate is a 'heading or 'marker."
 
 (defun helm-org-hop-marker-store-link (&optional candidate)
   "Helm action to store an Org link to CANDIDATE."
+  (ignore candidate)
   (helm-org-hop-store-link 'marker))
 
 (defun helm-org-hop-marker-insert-link (&optional candidate)
   "Helm action to insert an Org link to CANDIDATE."
+  (ignore candidate)
   (helm-org-hop-insert-link 'marker))
 
 (defun helm-org-hop-remove-recent-marker (&optional candidate)
   "Helm action to remove CANDIDATE from recent list."
+  (ignore candidate)
   (helm-org-hop-remove 'marker))
 
 
