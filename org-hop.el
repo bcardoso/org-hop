@@ -166,14 +166,12 @@ This function is controlled by the `org-hop-files' variable."
                               org-files))))
 
 
-;;;; Heading info
+;;;; Heading & marker info
 
 (defun org-hop-get-heading (&optional org-file)
   "Get Org heading at point."
   (interactive)
   (let ((org-filename (or org-file (buffer-file-name)))
-        (line-number (line-number-at-pos))
-        (props (cadr (org-element-at-point-no-context)))
         (tags (org-get-tags)))
     `(,(concat (org-format-outline-path
                 (org-get-outline-path t t)
@@ -184,13 +182,9 @@ This function is controlled by the `org-hop-files' variable."
                (if (and org-hop-headings-with-tags tags)
                    (format " %s" (org-make-tag-string tags))))
       (:type      "heading"
+       :marker    ,(point-marker)
        :file      ,org-filename
-       :line      ,line-number
-       :begin     ,(plist-get props :begin)
-       :end       ,(plist-get props :end)
-       :id        ,(plist-get props :ID)
-       :custom_id ,(plist-get props :CUSTOM_ID)
-       :tags      ,tags))))
+       :line      ,(line-number-at-pos)))))
 
 (defun org-hop-get-marker ()
   "Get current point marker."
@@ -206,7 +200,6 @@ This function is controlled by the `org-hop-files' variable."
       (:type   "marker"
        :marker ,(point-marker)
        :file   ,file
-       :buffer ,buffer
        :line   ,line-number))))
 
 (defun org-hop-headings-file (org-file)
@@ -303,82 +296,77 @@ if position is not under an Org heading."
     (cl-pushnew item org-hop-marker-list)
     (when (or verbose (called-interactively-p 'any))
       (message (format "Saved marker %s:%s"
-                       (plist-get (cadr item) :buffer)
+                       (buffer-name)
                        (plist-get (cadr item) :line))))))
 
 
 ;;;;; Actions
 
-(defun org-hop-to-heading-or-marker (heading-or-marker)
-  "Hop to HEADING-OR-MARKER in buffer."
-  (let* ((hom    (car heading-or-marker))
-         (file   (plist-get hom :file))
-         (line   (plist-get hom :line))
-         (marker (plist-get hom :marker))
+(defun org-hop-to-entry (entry)
+  "Hop to ENTRY in buffer."
+  (let* ((type   (plist-get (car entry) :type))
+         (marker (plist-get (car entry) :marker))
+         (file   (plist-get (car entry) :file))
+         (line   (plist-get (car entry) :line))
          (buffer (if marker
                      (marker-buffer marker)
                    (or (find-buffer-visiting file)
-                       (find-file-noselect file))))
-         (pos    (if marker
-                     (marker-position marker)
-                   (plist-get hom :begin))))
+                       (find-file-noselect file)))))
     (if (not buffer)
         (progn
-          (if (equal (plist-get hom :type) "marker")
-              (org-hop-remove-marker heading-or-marker)
-            (org-hop-remove-recent heading-or-marker))
+          (if (equal (plist-get (car entry) :type) "marker")
+              (org-hop-remove-recent-marker entry)
+            (org-hop-remove-recent-heading entry))
           (message "Buffer vanished."))
-      
       (if org-hop-mark-ring-push
           (org-mark-ring-push))
       (if org-hop-switch-to-buffer-other-window
           (switch-to-buffer-other-window buffer)
         (switch-to-buffer buffer))
-      (if pos (goto-char pos)
+      (if marker
+          (goto-char (marker-position marker))
         (goto-line line))
-      
       (when (and (eq major-mode 'org-mode) (org-at-heading-p))
         (org-hop-add-recent)
-        ;; (re-search-backward org-heading-regexp nil t)
+        (re-search-backward org-heading-regexp nil t)
         (org-show-context)
         (org-show-entry)
         (org-show-children))
       (recenter org-hop-recenter))))
 
-(defun org-hop-remove-recent (heading-or-marker)
-  "Remove Org heading from `org-hop-recent-list'."
-  (let ((heading (rassoc heading-or-marker org-hop-recent-list)))
-    (setq org-hop-recent-list (remove heading org-hop-recent-list))
-    (message (format "Removed from recent list: %s" (car heading)))))
 
-(defun org-hop-remove-marker (heading-or-marker)
-  "Remove Org heading from `org-hop-marker-list'."
-  (let ((item (rassoc heading-or-marker org-hop-marker-list)))
-    (setq org-hop-marker-list (remove item org-hop-marker-list))
-    (message (format "Removed from marker list: %s"
-                     (car (split-string
-                           (substring-no-properties (car item)) " "))))))
+;;;; Remove items from recent lists
 
+(defmacro org-hop-remove-recent (item from-list)
+  "Remove an item from a recent list."
+  `(let ((entry (rassoc ,item ,from-list)))
+     (setq ,from-list (remove entry ,from-list))
+     (message (format "Removed from recent list: %s" (car entry)))))
 
-;;;; Remove items from recent lists with completing-read
+(defun org-hop-remove-recent-heading (item)
+  (org-hop-remove-recent item org-hop-recent-list))
 
-(defun org-hop-remove-from-recent-list (&optional arg)
-  "Remove a heading from `org-hop-recent-list'.
-With C-u, reset the list."
+(defun org-hop-remove-recent-marker (item)
+  (org-hop-remove-recent item org-hop-marker-list))
+
+(defmacro org-hop-remove-from-recent (from-list &optional arg)
+  `(if ,arg
+       (setq ,from-list nil)
+     (let* ((entry (completing-read "Remove from list: " ,from-list))
+            (item (cdr (assoc entry ,from-list))))
+       (org-hop-remove-recent item ,from-list))))
+
+(defun org-hop-remove-heading-from-recent (&optional arg)
+  "Remove an item from a recent list using `completing-read'.
+With \\[universal-argument], reset the list."
   (interactive "P")
-  (if arg (setq org-hop-recent-list nil)
-    (let* ((entry (completing-read "Remove from list: " org-hop-recent-list))
-           (marker (cdr (assoc entry org-hop-recent-list))))
-      (org-hop-remove-recent marker))))
+  (org-hop-remove-from-recent org-hop-recent-list))
 
-(defun org-hop-remove-from-marker-list (&optional arg)
-  "Remove a marker from `org-hop-marker-list'.
-With C-u, reset the list."
+(defun org-hop-remove-marker-from-recent (&optional arg)
+  "Remove an item from a recent list using `completing-read'.
+With \\[universal-argument], reset the list."
   (interactive "P")
-  (if arg (setq org-hop-marker-list nil)
-    (let* ((entry (completing-read "Remove from list: " org-hop-marker-list))
-           (marker (cdr (assoc entry org-hop-marker-list))))
-      (org-hop-remove-marker marker))))
+  (org-hop-remove-from-recent org-hop-marker-list))
 
 
 ;;;; Main commands
@@ -392,9 +380,9 @@ With C-u, force refresh all lists."
   (let* ((org-headings (append org-hop-recent-list
                                org-hop-marker-list
                                (org-hop-headings arg)))
-         (entry (completing-read "Hop to: " org-headings))
-         (marker (cdr (assoc entry org-headings))))
-    (org-hop-to-heading-or-marker marker)))
+         (item (completing-read "Hop to: " org-headings))
+         (entry (cdr (assoc item org-headings))))
+    (org-hop-to-entry entry)))
 
 ;;;###autoload
 (defun org-hop-add-heading-or-marker (&optional arg)
