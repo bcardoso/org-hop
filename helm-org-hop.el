@@ -50,7 +50,7 @@
   :type 'boolean)
 
 (defcustom helm-org-hop-headings-actions
-  '(("Hop to heading"                   . org-hop-to-marker)
+  '(("Hop to heading"                   . org-hop-to-heading-or-marker)
     ("Store link to heading  `C-c l`"   . helm-org-hop-headings-store-link)
     ("Insert link to heading `C-c C-l`" . helm-org-hop-headings-insert-link))
   "Default actions alist for `helm-org-hop-headings-source'."
@@ -58,7 +58,7 @@
   :type '(alist :key-type string :value-type function))
 
 (defcustom helm-org-hop-recent-actions
-  '(("Hop to heading"                     . org-hop-to-marker)
+  '(("Hop to heading"                     . org-hop-to-heading-or-marker)
     ("Store link to heading    `C-c l`"   . helm-org-hop-headings-store-link)
     ("Insert link to heading   `C-c C-l`" . helm-org-hop-headings-insert-link)
     ("Remove heading from list `M-D`"     . helm-org-hop-remove-recent))
@@ -67,7 +67,7 @@
   :type '(alist :key-type string :value-type function))
 
 (defcustom helm-org-hop-marker-actions
-  '(("Hop to marker"                     . org-hop-to-marker)
+  '(("Hop to marker"                     . org-hop-to-heading-or-marker)
     ("Store link to marker    `C-c l`"   . helm-org-hop-marker-store-link)
     ("Insert link to marker   `C-c C-l`" . helm-org-hop-marker-insert-link)
     ("Remove marker from list `M-D`"     . helm-org-hop-remove-marker))
