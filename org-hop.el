@@ -97,6 +97,12 @@ relative to the selected window. See `recenter'."
   :group 'org-hop
   :type 'integer)
 
+(defcustom org-hop-cache-update-if-buffer-modified nil
+  "If nil, update cache for file if it was modified (saved) since last scan.
+If non-nil, update cache for file if its buffer was modified since last scan."
+  :group 'org-hop
+  :type 'boolean)
+
 
 ;;;; Variables
 
@@ -121,11 +127,15 @@ relative to the selected window. See `recenter'."
         org-hop-recent-list nil
         org-hop-marker-list nil))
 
-(defun org-hop-file-attr-modified (file)
-  "Return FILE modification time attribute in seconds."
+(defun org-hop-file-attr-modified (file &optional buffer-modified)
+  "Return FILE modification time attribute in seconds.
+When BUFFER-MODIFIED is non-nil, return current time if the buffer
+visiting FILE was modified since its file was last read or saved."
   (string-to-number
-   (format-time-string
-    "%s" (file-attribute-modification-time (file-attributes file)))))
+   (if (and buffer-modified (buffer-modified-p (find-buffer-visiting file)))
+       (format-time-string "%s")
+     (format-time-string
+      "%s" (file-attribute-modification-time (file-attributes file))))))
 
 (defun org-hop-files-truename (files)
   "Return the truenames of a list of FILES."
@@ -225,14 +235,16 @@ See `org-hop-headings-file'.
 
 When FORCE is non-nil, force the scan of all files."
   (let ((org-hop-cache-new nil)
-        (org-file-modified-time nil))
+        (org-file-cache-modified-time nil))
     (dolist (org-file (org-hop-files))
-      (setq org-file-modified-time (org-hop-file-attr-modified org-file))
+      (setq org-file-cache-modified-time (org-hop-file-attr-modified
+                                    org-file
+                                    org-hop-cache-update-if-buffer-modified))
       (cond
        ;; re-scan org-file headings
        ((or force
             (not org-hop-cache)
-            (> org-file-modified-time org-hop-last-scan)
+            (> org-file-cache-modified-time org-hop-last-scan)
             (not (assoc org-file org-hop-cache))
             (not (find-buffer-visiting org-file)))
         (message (format "Updating cache for %s..."
