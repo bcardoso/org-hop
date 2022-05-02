@@ -38,7 +38,7 @@
   :group 'org)
 
 (defcustom org-hop-files 'buffers
-  "Which Org files should be scanned by `org-hop-headings-scan'.
+  "Which Org files should be scanned by `org-hop-scan-headings'.
 This variable controls the function `org-hop-files'.  Default values are:
 
   'agenda          list of Org agenda files
@@ -76,7 +76,8 @@ This list precedes the files returned by function `org-hop-files'."
   :type 'integer)
 
 (defcustom org-hop-recent-idle-interval 15
-  "Idle interval, in seconds, to add current Org heading to `org-hop-recent-list'.  See `org-hop-recent-mode'."
+  "Idle interval in seconds to add current Org heading to `org-hop-headings-list'.
+See `org-hop-recent-mode'."
   :group 'org-hop
   :type 'integer)
 
@@ -107,25 +108,25 @@ If non-nil, update cache for file if its buffer was modified since last scan."
 ;;;; Variables
 
 (defvar org-hop-cache nil
-  "Org headings cache.  See `org-hop-headings-scan'.")
+  "Org headings cache.  See `org-hop-scan-headings'.")
 
 (defvar org-hop-last-scan 0
-  "Time of the last `org-hop-cache'.  See `org-hop-headings-scan'.")
+  "Time of the last `org-hop-cache'.  See `org-hop-scan-headings'.")
 
-(defvar org-hop-recent-list nil
+(defvar org-hop-headings-list nil
   "List of Org headings recently visited.  See `org-hop-add-heading'.")
 
-(defvar org-hop-marker-list nil
-  "List of saved point-markers.  See `org-hop-add-marker-to-list'.")
+(defvar org-hop-markers-list nil
+  "List of saved point-markers.  See `org-hop-add-marker'.")
 
 
 ;;;; Org files
 
 (defun org-hop-reset ()
   "Reset lists."
-  (setq org-hop-cache       nil
-        org-hop-recent-list nil
-        org-hop-marker-list nil))
+  (setq org-hop-cache         nil
+        org-hop-headings-list nil
+        org-hop-markers-list  nil))
 
 (defun org-hop-file-attr-modified (file &optional buffer-modified)
   "Return FILE modification time attribute in seconds.
@@ -135,7 +136,8 @@ visiting FILE was modified since its file was last read or saved."
    (if (and buffer-modified (buffer-modified-p (find-buffer-visiting file)))
        (format-time-string "%s")
      (format-time-string
-      "%s" (file-attribute-modification-time (file-attributes file))))))
+      "%s"
+      (file-attribute-modification-time (file-attributes file))))))
 
 (defun org-hop-files-truename (files)
   "Return the truenames of a list of FILES."
@@ -213,7 +215,7 @@ Optional argument ORG-FILE replaces current buffer file name attribute."
        :file   ,file
        :line   ,line-number))))
 
-(defun org-hop-headings-file (org-file)
+(defun org-hop-file-headings (org-file)
   "Return a list of Org headings from ORG-FILE."
   (let ((org-file-headings nil)
         (buffer-point nil))
@@ -226,13 +228,13 @@ Optional argument ORG-FILE replaces current buffer file name attribute."
       (goto-char buffer-point))
     (reverse org-file-headings)))
 
-(defun org-hop-headings-scan (&optional force)
+(defun org-hop-scan-headings (&optional force)
   "Scan the files returned by function `org-hop-files' for Org headings.
 
 The Org headings are stored in `org-hop-cache'.
 Scan only happens when files' modification times are greater
 than `org-hop-last-scan'; or when files are missing from `org-hop-cache'.
-See `org-hop-headings-file'.
+See `org-hop-file-headings'.
 
 When FORCE is non-nil, force the scan of all files."
   (let ((org-hop-cache-new nil)
@@ -250,7 +252,7 @@ When FORCE is non-nil, force the scan of all files."
             (not (find-buffer-visiting org-file)))
         (message (format "Updating cache for %s..."
                          (file-name-nondirectory org-file)))
-        (cl-pushnew `(,org-file . ,(list (org-hop-headings-file org-file)))
+        (cl-pushnew `(,org-file . ,(list (org-hop-file-headings org-file)))
                     org-hop-cache-new  :test #'equal))
        ;; or just copy them from cache
        (t
@@ -259,60 +261,59 @@ When FORCE is non-nil, force the scan of all files."
     (setq org-hop-cache org-hop-cache-new)
     (setq org-hop-last-scan (string-to-number (format-time-string "%s")))))
 
-(defun org-hop-headings (&optional force)
-  "Build the Org headings list.
-Optional argument FORCE will rescan all files."
-  (let ((org-headings-list nil))
-    (org-hop-headings-scan force)
-    (dotimes (_ (length org-hop-cache) org-headings-list)
-      (setq org-headings-list (append (cadr (nth _ org-hop-cache))
-                                      org-headings-list)))))
+(defun org-hop-all-headings (&optional force)
+  "Build the list of all possible Org headings.
+With optional argument FORCE, rescan all files."
+  (let ((all-org-headings-list nil))
+    (org-hop-scan-headings force)
+    (dotimes (n (length org-hop-cache))
+      (setq all-org-headings-list
+            (append (cadr (nth n org-hop-cache)) all-org-headings-list)))
+    all-org-headings-list))
 
 
 ;;;; Recent Org headings
 
+(defmacro org-hop-remove-dups-and-move-to-front (elt seq)
+  "Remove duplicate items from SEQ and put ELT as CAR of SEQ."
+  `(setq ,seq (cl-remove-duplicates ,seq :test #'equal :key #'car :from-end t))
+  `(setq ,seq (cons ,elt (delete ,elt ,seq))))
+
 (defun org-hop-add-heading (heading)
-  "Add Org HEADING to `org-hop-recent-list'."
-  ;; NOTE: always remove duplicate keys
-  (setq org-hop-recent-list (cl-remove-duplicates
-                             org-hop-recent-list
-                             :test #'equal :key #'car :from-end t))
-  ;; move heading to the beginning of recent list
-  (setq org-hop-recent-list
-        (cons heading (delete heading org-hop-recent-list))))
+  "Add Org HEADING to `org-hop-headings-list'."
+  (org-hop-remove-dups-and-move-to-front heading org-hop-headings-list))
 
-(defun org-hop-add-heading-to-recent-list (&optional add-marker verbose)
-  "When under an Org heading, add it to `org-hop-recent-list'.
-If VERBOSE is non-nil, show messages.
-
-If ADD-MARKER is non-nil, add current marker to `org-hop-marker-list'
-if position is not under an Org heading."
-  (interactive)
-  (let ((pos (point)))
-    (cond ((and (eq major-mode 'org-mode)
-                (buffer-file-name) ; NOTE: ignores indirect/capture buffers
-                (or (org-at-heading-p)
-                    (and (re-search-backward org-heading-regexp nil t)
-                         (org-at-heading-p))))
-           ;; NOTE: move to eol to make sure marker gets the right heading
-           (goto-char (point-at-eol))
-           (org-hop-add-heading (org-hop-get-heading))
-           (if verbose
-               (message (format "Saved %s" (car (org-hop-get-heading))))))
-          (add-marker
-           (org-hop-add-marker-to-list verbose)))
-    (goto-char pos)))
+(defun org-hop-add-marker (marker)
+  "Add MARKER to `org-hop-markers-list'."
+  (org-hop-remove-dups-and-move-to-front marker org-hop-markers-list))
 
 (defun org-hop-add-marker-to-list (&optional verbose)
-  "Save current `point-marker' to `org-hop-marker-list'.
-Optional argument VERBOSE to show a notification in echo area."
+  "Save current `point-marker' to `org-hop-markers-list'.
+When VERBOSE is non-nil, shows a notification in echo area."
   (interactive)
   (let ((item (org-hop-get-marker)))
-    (cl-pushnew item org-hop-marker-list)
+    (org-hop-add-marker item)
     (when (or verbose (called-interactively-p 'any))
       (message (format "Saved marker %s:%s"
                        (buffer-name)
                        (plist-get (cadr item) :line))))))
+
+(defun org-hop-add-heading-to-list (&optional verbose)
+  "When under an Org heading, add it to `org-hop-headings-list'.
+If VERBOSE is non-nil, show messages."
+  (interactive)
+  (let ((pos (point)))
+    (when (and (eq major-mode 'org-mode)
+               (buffer-file-name) ; NOTE: ignores indirect/capture buffers
+               (or (org-at-heading-p)
+                   (and (re-search-backward org-heading-regexp nil t)
+                        (org-at-heading-p))))      
+      (goto-char (point-at-eol))  ; NOTE: make sure we get the right heading
+      (let ((heading (org-hop-get-heading)))
+        (org-hop-add-heading heading)
+        (if (or verbose (called-interactively-p 'any))
+            (message (format "Saved %s" (car heading))))))
+    (goto-char pos)))
 
 
 ;;;;; Actions
@@ -338,7 +339,8 @@ Optional argument VERBOSE to show a notification in echo area."
 (defun org-hop-goto-char-or-line (char line)
   "If CHAR is non-nil, go to char.  Else, go to LINE."
   (if char (goto-char char)
-    (goto-line line)))
+    (goto-char (point-min))
+    (forward-line (1- line))))
 
 (defun org-hop-to-entry (candidate)
   "Hop to entry CANDIDATE in buffer."
@@ -357,12 +359,12 @@ Optional argument VERBOSE to show a notification in echo area."
              (org-hop-remove-recent-heading candidate)
              (org-hop-add-heading (org-hop-get-heading))
              (goto-char (point-at-bol))
-             (org-show-context)
+             (org-fold-show-context)
              (org-fold-show-entry)
-             (org-show-children))
+             (org-fold-show-children))
             (t
              (org-hop-remove-recent-marker candidate)
-             (org-hop-add-marker-to-list)))
+             (org-hop-add-marker (org-hop-get-marker))))
       (recenter org-hop-recenter))))
 
 
@@ -377,15 +379,15 @@ Optional argument VERBOSE to show a notification in echo area."
 
 (defun org-hop-remove-recent-heading (item)
   "Remove ITEM from recent headings list."
-  (org-hop-remove-recent item org-hop-recent-list))
+  (org-hop-remove-recent item org-hop-headings-list))
 
 (defun org-hop-remove-recent-marker (item)
   "Remove ITEM from recent marker list."
-  (org-hop-remove-recent item org-hop-marker-list))
+  (org-hop-remove-recent item org-hop-markers-list))
 
 (defmacro org-hop-remove-from-recent (recent-list &optional arg)
   "Remove an item from a RECENT-LIST using `completing-read'.
-Optional argument ARG set RECENT-LIST to nil."
+With optional argument ARG, set RECENT-LIST to nil."
   `(if ,arg
        (setq ,recent-list nil)
      (let* ((entry (completing-read "Remove from list: " ,recent-list))
@@ -394,17 +396,15 @@ Optional argument ARG set RECENT-LIST to nil."
 
 (defun org-hop-remove-heading-from-recent (&optional arg)
   "Remove an item from a recent list using `completing-read'.
-With \\[universal-argument], reset the list.
-Optional argument ARG set list to nil."
+With optional argument ARG, set list to nil."
   (interactive "P")
-  (org-hop-remove-from-recent org-hop-recent-list))
+  (org-hop-remove-from-recent org-hop-headings-list arg))
 
 (defun org-hop-remove-marker-from-recent (&optional arg)
   "Remove an item from a recent list using `completing-read'.
-With \\[universal-argument], reset the list.
-Optional argument ARG set list to nil."
+With optional argument ARG, set list to nil."
   (interactive "P")
-  (org-hop-remove-from-recent org-hop-marker-list))
+  (org-hop-remove-from-recent org-hop-markers-list arg))
 
 
 ;;;; Main commands
@@ -412,13 +412,12 @@ Optional argument ARG set list to nil."
 ;;;###autoload
 (defun org-hop (&optional arg)
   "Hop to a Org heading.
-With \\[universal-argument], force refresh all lists.
-Optional argument ARG will reset all lists."
+With optional argument ARG, force refresh all lists."
   (interactive "P")
   (when arg (org-hop-reset))
-  (let* ((org-headings (append org-hop-recent-list
-                               org-hop-marker-list
-                               (org-hop-headings arg)))
+  (let* ((org-headings (append org-hop-headings-list
+                               org-hop-markers-list
+                               (org-hop-all-headings arg)))
          (item (completing-read "Hop to: " org-headings))
          (entry (cdr (assoc item org-headings))))
     (org-hop-to-entry entry)))
@@ -426,21 +425,22 @@ Optional argument ARG will reset all lists."
 ;;;###autoload
 (defun org-hop-add-heading-or-marker (&optional arg)
   "Add current heading to recent list.
-Optional argument ARG will add current position as a marker."
+With optional argument ARG, add current position as a marker."
   (interactive "P")
-  (if arg (org-hop-add-marker-to-list)
-    (org-hop-add-heading-to-recent-list t t)))
+  (if arg
+      (org-hop-add-marker-to-list t)
+    (org-hop-add-heading-to-list t)))
 
 (define-minor-mode org-hop-recent-mode
   "Toggle `org-hop-recent-mode'.
-When idle, add current Org heading to `org-hop-recent-list'."
+When idle, add current Org heading to `org-hop-headings-list'."
   :init-value nil
   :lighter nil
   :group 'org-hop
   (if org-hop-recent-mode
       (run-with-idle-timer org-hop-recent-idle-interval t
-                           #'org-hop-add-heading-to-recent-list)
-    (cancel-function-timers #'org-hop-add-heading-to-recent-list)))
+                           #'org-hop-add-heading-to-list)
+    (cancel-function-timers #'org-hop-add-heading-to-list)))
 
 
 (provide 'org-hop)
