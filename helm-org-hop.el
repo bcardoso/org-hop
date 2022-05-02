@@ -40,12 +40,12 @@
   :group 'org-hop)
 
 (defcustom helm-org-hop-capture-key "n"
-  "The key string associated with a template in org-capture-templates."
+  "The key string associated with a template in `org-capture-templates'."
   :group 'helm-org-hop
   :type 'string)
 
 (defcustom helm-org-hop-capture-insert-input t
-  "If non-nil, insert user input in org-capture buffer."
+  "If non-nil, insert user input in `org-capture' buffer."
   :group 'helm-org-hop
   :type 'boolean)
 
@@ -108,6 +108,8 @@
 ;;;; Actions
 
 (defun helm-org-hop-remove (type)
+  "Remove candidates in variable `helm-marked-candidates' from recent list.
+Argument TYPE indicates if candidate is a 'heading or 'marker."
   (let ((num (length (helm-marked-candidates))))
     (dolist (item (helm-marked-candidates))
       (if (eq type 'heading)
@@ -117,6 +119,8 @@
         (message (format "Removed %s entries from %s list." num type)))))
 
 (defun helm-org-hop-insert-link (type)
+  "Insert Org links to candidates in variable `helm-marked-candidates'.
+Argument TYPE indicates if candidate is a 'heading or 'marker."
   (let ((org-link-file-path-type 'absolute)
         (point (point))
         (num (length (helm-marked-candidates))))
@@ -136,6 +140,8 @@
       (org-insert-all-links 1 "" ""))))
 
 (defun helm-org-hop-store-link (type)
+  "Store Org links to candidates in variable `helm-marked-candidates'.
+Argument TYPE indicates if candidate is a 'heading or 'marker."
   (let ((point (point))
         (num (length (helm-marked-candidates))))
     (dolist (item (helm-marked-candidates))
@@ -152,6 +158,7 @@
         (message (format "Stored %s links" num)))))
 
 (defun helm-org-hop-store-marker-link ()
+  "Store custom Org links to candidates in variable `helm-marked-candidates'."
   (let* ((file (buffer-file-name))
          (filename (file-name-nondirectory file))
          (line (line-number-at-pos)))
@@ -166,30 +173,37 @@
 ;;;;; Headings actions
 
 (defun helm-org-hop-headings-store-link (candidate)
+  "Helm action to store an Org link to CANDIDATE."
   (helm-org-hop-store-link 'heading))
 
 (defun helm-org-hop-headings-insert-link (candidate)
+  "Helm action to insert an Org link to CANDIDATE."
   (helm-org-hop-insert-link 'heading))
 
 (defun helm-org-hop-remove-recent-heading (candidate)
+  "Helm action to remove CANDIDATE from recent list."
   (helm-org-hop-remove 'heading))
 
 
 ;;;;; Markers actions
 
 (defun helm-org-hop-marker-store-link (candidate)
+  "Helm action to store an Org link to CANDIDATE."
   (helm-org-hop-store-link 'marker))
 
 (defun helm-org-hop-marker-insert-link (candidate)
+  "Helm action to insert an Org link to CANDIDATE."
   (helm-org-hop-insert-link 'marker))
 
 (defun helm-org-hop-remove-recent-marker (candidate)
+  "Helm action to remove CANDIDATE from recent list."
   (helm-org-hop-remove 'marker))
 
 
 ;;;;; Capture actions
 
 (defun helm-org-hop-capture-note (input)
+  "Helm action to `org-capture' a note based on INPUT."
   (org-capture nil helm-org-hop-capture-key)
   (if helm-org-hop-capture-insert-input (insert input)))
 
@@ -259,6 +273,8 @@
   "Keymap for `helm-org-hop-marker-source'.")
 
 (defun helm-org-hop-build-sources (&optional force)
+  "Build Helm sources for all lists.
+Optional argument FORCE will reset all lists."
   (when force (org-hop-reset))
   (setq helm-org-hop-recent-source
         (helm-build-sync-source "Recent Org headings: "
@@ -285,7 +301,8 @@
 ;;;###autoload
 (defun helm-org-hop (&optional arg)
   "Helm for Org headings.
-With C-u, force refresh all lists."
+With \\[universal-argument], force refresh all lists.
+Optional argument ARG will reset all lists."
   (interactive "P")
   (helm-org-hop-build-sources arg)
   (helm :buffer "*helm-org-hop*"
