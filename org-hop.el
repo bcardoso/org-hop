@@ -316,25 +316,26 @@ When VERBOSE is non-nil, shows a notification in echo area."
                        (buffer-name)
                        (plist-get (cadr item) :line))))))
 
-(defun org-hop-add-heading-to-list (&optional verbose)
+(defun org-hop-add-heading-to-list (&optional add-marker verbose)
   "When under an Org heading, add it to `org-hop-headings-list'.
-Elsewhere, add position to `org-hop-add-marker-to-list'.
+Elsewhere, if ADD-MARKER is non-nil, run `org-hop-add-marker-to-list'.
+
 If VERBOSE is non-nil, show messages in echo area."
   (interactive)
   (let ((pos (point)))
-    (if (and (eq major-mode 'org-mode)
-             (buffer-file-name) ; NOTE: ignores indirect/capture buffers
-             (or (org-at-heading-p)
-                 (and (re-search-backward org-heading-regexp nil t)
-                      (org-at-heading-p))))
-        (progn
-          (goto-char (point-at-eol))  ; NOTE: make sure we get the right heading
-          (let ((heading (org-hop-get-heading)))
-            (org-hop-add-heading heading)
-            (if (or verbose (called-interactively-p 'any))
-                (message (format "Saved %s" (car heading))))))
-      (org-hop-add-marker-to-list verbose))
-    (goto-char pos)))
+    (cond ((and (eq major-mode 'org-mode)
+                (buffer-file-name) ; NOTE: ignores indirect/capture buffers
+                (or (org-at-heading-p)
+                    (and (re-search-backward org-heading-regexp nil t)
+                         (org-at-heading-p))))
+           (goto-char (point-at-eol))  ; NOTE: make sure we get the right heading
+           (let ((heading (org-hop-get-heading)))
+             (org-hop-add-heading heading)
+             (if (or verbose (called-interactively-p 'any))
+                 (message (format "Saved %s" (car heading))))))
+          (add-marker
+           (org-hop-add-marker-to-list verbose)))
+      (goto-char pos)))
 
 
 ;;;;; Actions
@@ -462,7 +463,7 @@ With optional argument ARG, add current position as a marker."
   (interactive "P")
   (if arg
       (org-hop-add-marker-to-list t)
-    (org-hop-add-heading-to-list t)))
+    (org-hop-add-heading-to-list t t)))
 
 (define-minor-mode org-hop-recent-mode
   "Toggle `org-hop-recent-mode'.
