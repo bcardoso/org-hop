@@ -238,16 +238,16 @@ See `org-hop-file-headings'.
 
 When FORCE is non-nil, force the scan of all files."
   (let ((org-hop-cache-new nil)
-        (org-file-cache-modified-time nil))
+        (org-file-modified-time nil))
     (dolist (org-file (org-hop-files))
-      (setq org-file-cache-modified-time (org-hop-file-attr-modified
+      (setq org-file-modified-time (org-hop-file-attr-modified
                                     org-file
                                     org-hop-cache-update-if-buffer-modified))
       (cond
        ;; re-scan org-file headings
        ((or force
             (not org-hop-cache)
-            (> org-file-cache-modified-time org-hop-last-scan)
+            (> org-file-modified-time org-hop-last-scan)
             (not (assoc org-file org-hop-cache))
             (not (find-buffer-visiting org-file)))
         (message (format "Updating cache for %s..."
@@ -346,7 +346,7 @@ If VERBOSE is non-nil, show messages in echo area."
     (forward-line (1- line))))
 
 (defun org-hop-to-entry (candidate)
-  "Hop to entry CANDIDATE in buffer."
+  "Hop to entry CANDIDATE."
   (let* ((entry  (org-hop-get-coordinates candidate))
          (buffer (plist-get entry :buffer))
          (char   (plist-get entry :char))
