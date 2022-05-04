@@ -196,8 +196,10 @@ Optional argument ORG-FILE replaces current buffer file name attribute."
                (if (and org-hop-headings-with-tags tags)
                    (format " %s" (org-make-tag-string tags))))
       (:type      "heading"
-       :marker    ,(point-marker)
+       ;;:marker    ,(point-marker)
        :file      ,org-filename
+       :buffer    ,(buffer-name)
+       :char      ,(point)
        :line      ,(line-number-at-pos)))))
 
 (defun org-hop-get-marker ()
@@ -212,8 +214,10 @@ Optional argument ORG-FILE replaces current buffer file name attribute."
         "\n" ""
         (format "%s:%s %s" buffer line-number line))
       (:type   "marker"
-       :marker ,(point-marker)
+       ;;:marker ,(point-marker)
        :file   ,file
+       :buffer ,(buffer-name)
+       :char   ,(point)
        :line   ,line-number))))
 
 (defun org-hop-file-headings (org-file)
@@ -275,18 +279,31 @@ With optional argument FORCE, rescan all files."
 
 ;;;; Recent Org headings
 
-(defmacro org-hop-remove-dups-and-move-to-front (elt seq)
-  "Remove duplicate items from SEQ and put ELT as CAR of SEQ."
-  `(setq ,seq (cl-remove-duplicates ,seq :test #'equal :key #'car :from-end t))
-  `(setq ,seq (cons ,elt (delete ,elt ,seq))))
+(defmacro org-hop-add (item recent-list)
+  "Add ITEM as CAR of RECENT-LIST."
+  `(setq ,recent-list (delete ,item ,recent-list))
+
+  ;; add item with marker
+  `(let ((buffer (plist-get (cadr ,item) :buffer))
+         (char   (plist-get (cadr ,item) :char))
+         (new-item))
+     (push (plist-put (cadr ,item)
+                       :marker (with-current-buffer buffer
+                                 (goto-char char)
+                                 (point-marker)))
+           new-item)
+     (push (car ,item) new-item)
+     (cl-pushnew new-item ,recent-list)))
 
 (defun org-hop-add-heading (heading)
   "Add Org HEADING to `org-hop-headings-list'."
-  (org-hop-remove-dups-and-move-to-front heading org-hop-headings-list))
+  (org-hop-add heading org-hop-headings-list)
+  (org-hop-remove-dups org-hop-headings-list))
 
 (defun org-hop-add-marker (marker)
   "Add MARKER to `org-hop-markers-list'."
-  (org-hop-remove-dups-and-move-to-front marker org-hop-markers-list))
+  (org-hop-add marker org-hop-markers-list)
+  (org-hop-remove-dups org-hop-markers-list))
 
 (defun org-hop-add-marker-to-list (&optional verbose)
   "Save current `point-marker' to `org-hop-markers-list'.
@@ -328,10 +345,14 @@ If VERBOSE is non-nil, show messages in echo area."
          (marker (plist-get (car candidate) :marker))
          (file   (plist-get (car candidate) :file))
          (line   (plist-get (car candidate) :line))
-         (buffer (or (marker-buffer marker)
-                     (find-buffer-visiting file)
-                     (find-file-noselect file)))
-         (char   (marker-position marker)))
+         (buffer (if marker
+                     (marker-buffer marker)
+                   (or (plist-get (car candidate) :buffer)
+                       (find-buffer-visiting file)
+                       (find-file-noselect file))))
+         (char   (if marker
+                     (marker-position marker)
+                   (plist-get (car candidate) :char))))
     (if buffer
         `(:type ,type :buffer ,buffer :line ,line :char ,char)
       (if (equal type "marker")
@@ -360,7 +381,9 @@ If VERBOSE is non-nil, show messages in echo area."
       (org-hop-goto-char-or-line char line)
       ;; post-hop actions
       (cond ((and (eq major-mode 'org-mode) (org-at-heading-p))
+             ;; FIXME 2022-05-04: this is not ideal
              (org-hop-remove-heading candidate)
+             ;; (org-element-cache-reset)
              (org-hop-add-heading (org-hop-get-heading))
              (goto-char (point-at-bol))
              (org-fold-show-context)
@@ -373,6 +396,12 @@ If VERBOSE is non-nil, show messages in echo area."
 
 
 ;;;; Remove items from recent lists
+
+(defmacro org-hop-remove-dups (recent-list)
+  "Remove duplicates from recent list."
+  `(setq ,recent-list
+         (cl-remove-duplicates ,recent-list
+                               :test #'equal :key #'car :from-end t)))
 
 (defmacro org-hop-remove (item list &optional verbose)
   "Remove an ITEM from a recent from LIST."
