@@ -126,7 +126,8 @@ If non-nil, update cache for file if its buffer was modified since last scan."
   "Reset lists."
   (setq org-hop-cache         nil
         org-hop-headings-list nil
-        org-hop-markers-list  nil))
+        org-hop-markers-list  nil)
+  (org-element-cache-reset t))
 
 (defun org-hop-file-attr-modified (file &optional buffer-modified)
   "Return FILE modification time attribute in seconds.
