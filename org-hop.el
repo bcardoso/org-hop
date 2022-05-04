@@ -381,9 +381,7 @@ If VERBOSE is non-nil, show messages in echo area."
       (org-hop-goto-char-or-line char line)
       ;; post-hop actions
       (cond ((and (eq major-mode 'org-mode) (org-at-heading-p))
-             ;; FIXME 2022-05-04: this is not ideal
              (org-hop-remove-heading candidate)
-             ;; (org-element-cache-reset)
              (org-hop-add-heading (org-hop-get-heading))
              (goto-char (point-at-bol))
              (org-fold-show-context)
