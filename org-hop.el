@@ -185,40 +185,40 @@ This function is controlled by the variable `org-hop-files'."
   "Get Org heading at point.
 Optional argument ORG-FILE replaces current buffer file name attribute."
   (interactive)
-  (let ((org-filename (or org-file (buffer-file-name)))
+  (let ((file (buffer-file-name))
+        (buffer (buffer-name))
         (tags (org-get-tags)))
     `(,(concat (org-format-outline-path
                 (org-get-outline-path t t)
                 org-hop-headings-width
                 (if org-hop-headings-with-filename
-                    (format "%s:" (file-name-nondirectory org-filename)))
+                    (format "%s:" (file-name-nondirectory file)))
                 "/")
                (if (and org-hop-headings-with-tags tags)
                    (format " %s" (org-make-tag-string tags))))
       (:type      "heading"
-       ;;:marker    ,(point-marker)
-       :file      ,org-filename
-       :buffer    ,(buffer-name)
+       :file      ,file
+       :buffer    ,buffer
        :char      ,(point)
-       :line      ,(line-number-at-pos)))))
+       :line      ,(line-number-at-pos)
+       :marker    nil))))
 
 (defun org-hop-get-marker ()
-  "Get current point marker."
+  "Get current point data."
   (interactive)
   (let* ((file (buffer-file-name))
-         (buffer (if file (file-name-nondirectory file)
-                   (buffer-name)))
+         (buffer (buffer-name))
          (line-number (line-number-at-pos))
          (line (thing-at-point 'line)))
     `(,(replace-regexp-in-string
         "\n" ""
         (format "%s:%s %s" buffer line-number line))
       (:type   "marker"
-       ;;:marker ,(point-marker)
        :file   ,file
-       :buffer ,(buffer-name)
+       :buffer ,buffer
        :char   ,(point)
-       :line   ,line-number))))
+       :line   ,line-number
+       :marker  nil))))
 
 (defun org-hop-file-headings (org-file)
   "Return a list of Org headings from ORG-FILE."
@@ -228,8 +228,7 @@ Optional argument ORG-FILE replaces current buffer file name attribute."
       (setq buffer-point (point))
       (goto-char (point-min))
       (while (re-search-forward org-heading-regexp nil t)
-        (cl-pushnew (org-hop-get-heading org-file)
-                    org-file-headings :test #'equal))
+        (cl-pushnew (org-hop-get-heading) org-file-headings :test #'equal))
       (goto-char buffer-point))
     (reverse org-file-headings)))
 
