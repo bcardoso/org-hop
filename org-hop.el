@@ -300,19 +300,22 @@ When VERBOSE is non-nil, shows a notification in echo area."
 
 (defun org-hop-add-heading-to-list (&optional verbose)
   "When under an Org heading, add it to `org-hop-headings-list'.
-If VERBOSE is non-nil, show messages."
+Elsewhere, add position to `org-hop-add-marker-to-list'.
+If VERBOSE is non-nil, show messages in echo area."
   (interactive)
   (let ((pos (point)))
-    (when (and (eq major-mode 'org-mode)
-               (buffer-file-name) ; NOTE: ignores indirect/capture buffers
-               (or (org-at-heading-p)
-                   (and (re-search-backward org-heading-regexp nil t)
-                        (org-at-heading-p))))      
-      (goto-char (point-at-eol))  ; NOTE: make sure we get the right heading
-      (let ((heading (org-hop-get-heading)))
-        (org-hop-add-heading heading)
-        (if (or verbose (called-interactively-p 'any))
-            (message (format "Saved %s" (car heading))))))
+    (if (and (eq major-mode 'org-mode)
+             (buffer-file-name) ; NOTE: ignores indirect/capture buffers
+             (or (org-at-heading-p)
+                 (and (re-search-backward org-heading-regexp nil t)
+                      (org-at-heading-p))))
+        (progn
+          (goto-char (point-at-eol))  ; NOTE: make sure we get the right heading
+          (let ((heading (org-hop-get-heading)))
+            (org-hop-add-heading heading)
+            (if (or verbose (called-interactively-p 'any))
+                (message (format "Saved %s" (car heading))))))
+      (org-hop-add-marker-to-list verbose))
     (goto-char pos)))
 
 
