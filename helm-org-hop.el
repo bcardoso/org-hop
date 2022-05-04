@@ -62,7 +62,7 @@
   '(("Hop to heading"                     . org-hop-to-entry)
     ("Store link to heading    `C-c l`"   . helm-org-hop-headings-store-link)
     ("Insert link to heading   `C-c C-l`" . helm-org-hop-headings-insert-link)
-    ("Remove heading from list `M-D`"     . helm-org-hop-remove-recent-heading))
+    ("Remove heading from list `M-D`"     . helm-org-hop-remove-heading))
   "Default actions alist for `helm-org-hop-headings-source'."
   :group 'helm-org-hop
   :type '(alist :key-type string :value-type function))
@@ -71,7 +71,7 @@
   '(("Hop to marker"                     . org-hop-to-entry)
     ("Store link to marker    `C-c l`"   . helm-org-hop-marker-store-link)
     ("Insert link to marker   `C-c C-l`" . helm-org-hop-marker-insert-link)
-    ("Remove marker from list `M-D`"     . helm-org-hop-remove-recent-marker))
+    ("Remove marker from list `M-D`"     . helm-org-hop-remove-marker))
   "Default actions alist for `helm-org-hop-markers-source'."
   :group 'helm-org-hop
   :type '(alist :key-type string :value-type function))
@@ -115,8 +115,8 @@ Argument TYPE indicates if candidate is a 'heading or 'marker."
          (verbose (eq num 1)))
     (dolist (item (helm-marked-candidates))
       (if (eq type 'heading)
-          (org-hop-remove-recent-heading item verbose)
-        (org-hop-remove-recent-marker item verbose)))
+          (org-hop-remove-heading item verbose)
+        (org-hop-remove-marker item verbose)))
     (if (> num 1)
         (message (format "Removed %s entries from %s list." num type)))))
 
@@ -184,7 +184,7 @@ Argument TYPE indicates if candidate is a 'heading or 'marker."
   (ignore candidate)
   (helm-org-hop-insert-link 'heading))
 
-(defun helm-org-hop-remove-recent-heading (&optional candidate)
+(defun helm-org-hop-remove-heading (&optional candidate)
   "Helm action to remove CANDIDATE from recent list."
   (ignore candidate)
   (helm-org-hop-remove 'heading))
@@ -202,7 +202,7 @@ Argument TYPE indicates if candidate is a 'heading or 'marker."
   (ignore candidate)
   (helm-org-hop-insert-link 'marker))
 
-(defun helm-org-hop-remove-recent-marker (&optional candidate)
+(defun helm-org-hop-remove-marker (&optional candidate)
   "Helm action to remove CANDIDATE from recent list."
   (ignore candidate)
   (helm-org-hop-remove 'marker))
@@ -231,10 +231,10 @@ Argument TYPE indicates if candidate is a 'heading or 'marker."
     (helm-exit-and-execute-action 'helm-org-hop-headings-insert-link)))
 
 (defun helm-org-hop-run-remove-recent ()
-  "Run interactively `helm-org-hop-remove-recent-heading'."
+  "Run interactively `helm-org-hop-remove-heading'."
   (interactive)
   (with-helm-alive-p
-    (helm-exit-and-execute-action 'helm-org-hop-remove-recent-heading)))
+    (helm-exit-and-execute-action 'helm-org-hop-remove-heading)))
 
 (defun helm-org-hop-run-marker-store-link ()
   "Run interactively `helm-org-hop-marker-store-link'."
@@ -249,10 +249,10 @@ Argument TYPE indicates if candidate is a 'heading or 'marker."
     (helm-exit-and-execute-action 'helm-org-hop-marker-insert-link)))
 
 (defun helm-org-hop-run-remove-marker ()
-  "Run interactively `helm-org-hop-remove-recent-marker'."
+  "Run interactively `helm-org-hop-remove-marker'."
   (interactive)
   (with-helm-alive-p
-    (helm-exit-and-execute-action 'helm-org-hop-remove-recent-marker)))
+    (helm-exit-and-execute-action 'helm-org-hop-remove-marker)))
 
 (defvar helm-org-hop-headings-map
   (let ((map (make-sparse-keymap)))

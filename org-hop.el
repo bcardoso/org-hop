@@ -331,8 +331,8 @@ If VERBOSE is non-nil, show messages."
     (if buffer
         `(:type ,type :buffer ,buffer :line ,line :char ,char)
       (if (equal type "marker")
-          (org-hop-remove-recent-marker candidate)
-        (org-hop-remove-recent-heading candidate))
+          (org-hop-remove-marker candidate)
+        (org-hop-remove-heading candidate))
       (message "Buffer %s vanished." buffer)
       nil)))
 
@@ -356,55 +356,55 @@ If VERBOSE is non-nil, show messages."
       (org-hop-goto-char-or-line char line)
       ;; post-hop actions
       (cond ((and (eq major-mode 'org-mode) (org-at-heading-p))
-             (org-hop-remove-recent-heading candidate)
+             (org-hop-remove-heading candidate)
              (org-hop-add-heading (org-hop-get-heading))
              (goto-char (point-at-bol))
              (org-fold-show-context)
              (org-fold-show-entry)
              (org-fold-show-children))
             (t
-             (org-hop-remove-recent-marker candidate)
+             (org-hop-remove-marker candidate)
              (org-hop-add-marker (org-hop-get-marker))))
       (recenter org-hop-recenter))))
 
 
 ;;;; Remove items from recent lists
 
-(defmacro org-hop-remove-recent (item list &optional verbose)
+(defmacro org-hop-remove (item list &optional verbose)
   "Remove an ITEM from a recent from LIST."
   `(let ((entry (rassoc ,item ,list)))
      (setq ,list (remove entry ,list))
      (when (or ,verbose (called-interactively-p 'any))
        (message (format "Removed from recent list: %s" (car entry))))))
 
-(defun org-hop-remove-recent-heading (item &optional verbose)
+(defun org-hop-remove-heading (item &optional verbose)
   "Remove ITEM from recent headings list."
-  (org-hop-remove-recent item org-hop-headings-list verbose))
+  (org-hop-remove item org-hop-headings-list verbose))
 
-(defun org-hop-remove-recent-marker (item &optional verbose)
+(defun org-hop-remove-marker (item &optional verbose)
   "Remove ITEM from recent marker list."
-  (org-hop-remove-recent item org-hop-markers-list verbose))
+  (org-hop-remove item org-hop-markers-list verbose))
 
-(defmacro org-hop-remove-from-recent (recent-list &optional arg)
+(defmacro org-hop-remove-from-list (recent-list &optional arg)
   "Remove an item from a RECENT-LIST using `completing-read'.
 With optional argument ARG, set RECENT-LIST to nil."
   `(if ,arg
        (setq ,recent-list nil)
      (let* ((entry (completing-read "Remove from list: " ,recent-list))
             (item (cdr (assoc entry ,recent-list))))
-       (org-hop-remove-recent item ,recent-list))))
+       (org-hop-remove item ,recent-list))))
 
 (defun org-hop-remove-heading-from-list (&optional arg)
   "Remove an item from a recent list using `completing-read'.
 With optional argument ARG, set list to nil."
   (interactive "P")
-  (org-hop-remove-from-recent org-hop-headings-list arg))
+  (org-hop-remove-from-list org-hop-headings-list arg))
 
 (defun org-hop-remove-marker-from-list (&optional arg)
   "Remove an item from a recent list using `completing-read'.
 With optional argument ARG, set list to nil."
   (interactive "P")
-  (org-hop-remove-from-recent org-hop-markers-list arg))
+  (org-hop-remove-from-list org-hop-markers-list arg))
 
 
 ;;;; Main commands
