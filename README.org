@@ -43,13 +43,13 @@ Just run =M-x org-hop= or with the suggested binding =C-c h=.
 
 Or, if you are a Helm user, =M-x helm-org-hop= or =C-c j=.
 
-Additionally, you can store markers to any file or buffer with =M-x org-hop-add-marker= or =M-x org-hop-add-heading-or-marker=.
+Additionally, you can store markers to any file or buffer with =M-x org-hop-add-marker-to-list= or =M-x org-hop-add-heading-or-marker=.
 
 With the =helm-org-hop= interface, besides hopping, you can store/insert a link to a heading or a marker, and remove them from the recent list.
 
 The =org-hop-recent-mode= keeps track of the headings you spend some time in (see =org-hop-recent-idle-interval=).
 
-The recent headings and markers are shown at the top of the general headings list. To remove them, use =M-x org-hop-remove-from-recent-list= or =M-x org-hop-remove-from-marker-list=.
+The recent headings and markers are shown at the top of the general headings list. To remove them, use =M-x org-hop-remove-heading-from-list= or =M-x org-hop-remove-marker-from-list=.
 
 
 ** Customization
@@ -80,6 +80,8 @@ By default, =org-hop= will scan all open Org buffers. You can also edit the vari
 (setq org-hop-files       'agenda
       org-hop-files-extra '("x.org" "y.org"))
 #+end_src
+
+Use the variable =org-hop-files-ignore= to specify a list of Org files that should be ignored.
 
 
 ** Related packages
