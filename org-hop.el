@@ -60,6 +60,11 @@ This list precedes the files returned by function `org-hop-files'."
   :group 'org-hop
   :type 'sexp)
 
+(defcustom org-hop-headings-with-todo-prefix nil
+  "If non-nil, prefix headings with their current Org TODO keyword."
+  :group 'org-hop
+  :type 'boolean)
+
 (defcustom org-hop-headings-with-filename t
   "If non-nil, display Org file name before headings."
   :group 'org-hop
@@ -185,16 +190,22 @@ This function is controlled by the variable `org-hop-files'."
   "Get Org heading at point data."
   (interactive)
   (let ((file (buffer-file-name))
-        (buffer (buffer-name))
-        (tags (org-get-tags)))
-    `(,(concat (org-format-outline-path
-                (org-get-outline-path t t)
-                org-hop-headings-width
-                (if org-hop-headings-with-filename
-                    (format "%s:" (file-name-nondirectory file)))
-                "/")
-               (if (and org-hop-headings-with-tags tags)
-                   (format " %s" (org-make-tag-string tags))))
+        (buffer (buffer-name)))
+    `(,(concat
+        ;; todo keyword
+        (if org-hop-headings-with-todo-prefix
+            (let ((todo (org-get-todo-state)))
+              (if todo (format "#%s " todo))))
+        ;; file name
+        (if org-hop-headings-with-filename
+            (format "%s:/" (file-name-nondirectory file)))
+        ;; org heading
+        (org-format-outline-path
+         (org-get-outline-path t t) org-hop-headings-width nil "/")
+        ;; tags
+        (if org-hop-headings-with-tags
+            (let ((tags (org-get-tags)))
+              (if tags (format " %s" (org-make-tag-string tags))))))
       (:type   "heading"
        :file   ,file
        :buffer ,buffer
