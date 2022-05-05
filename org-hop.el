@@ -275,10 +275,10 @@ With optional argument FORCE, rescan all files."
 
 ;;;; Recent Org headings
 
-(defmacro org-hop-move-to-front (item recent-list)
-  "Put ITEM in from of RECENT-LIST."
-  `(setq ,recent-list (delete ,item ,recent-list))
-  `(cl-pushnew ,item ,recent-list))
+(defmacro org-hop-move-to-front (old new recent-list)
+  "Remove OLD and put NEW in from of RECENT-LIST."
+  `(setq ,recent-list (delete ,old ,recent-list))
+  `(cl-pushnew ,new ,recent-list))
 
 (defmacro org-hop-remove-dups (recent-list)
   "Remove duplicates from RECENT-LIST."
@@ -286,14 +286,32 @@ With optional argument FORCE, rescan all files."
          (cl-remove-duplicates ,recent-list
                                :test #'equal :key #'car :from-end t)))
 
+(defun org-hop-get-point-marker (item)
+  "Return a new ITEM with a `point-marker' property."
+  (let* ((buffer (plist-get (cadr item) :buffer))
+         (char   (plist-get (cadr item) :char))
+         (marker)
+         (new))
+    (save-excursion
+      (switch-to-buffer buffer)
+      (goto-char char)
+      (setq marker (point-marker)))
+    (push (plist-put (cadr item) :marker marker) new)
+    (push (car item) new)
+    new))
+
 (defun org-hop-add-heading (heading)
   "Add Org HEADING to `org-hop-headings-list'."
-  (org-hop-move-to-front heading org-hop-headings-list)
+  (org-hop-move-to-front heading
+                         (org-hop-get-point-marker heading)
+                         org-hop-headings-list)
   (org-hop-remove-dups org-hop-headings-list))
 
 (defun org-hop-add-marker (marker)
   "Add MARKER to `org-hop-markers-list'."
-  (org-hop-move-to-front marker org-hop-markers-list)
+  (org-hop-move-to-front marker
+                         (org-hop-get-point-marker marker)
+                         org-hop-markers-list)
   (org-hop-remove-dups org-hop-markers-list))
 
 (defun org-hop-add-marker-to-list (&optional verbose)
@@ -373,14 +391,14 @@ If VERBOSE is non-nil, show messages in echo area."
       (org-hop-goto-char-or-line char line)
       ;; post-hop actions
       (cond ((and (eq major-mode 'org-mode) (org-at-heading-p))
-             ;;(org-hop-remove-heading candidate)
+             (org-hop-remove-heading candidate)
              (org-hop-add-heading (org-hop-get-heading))
              (goto-char (point-at-bol))
              (org-fold-show-context)
              (org-fold-show-entry)
              (org-fold-show-children))
             (t
-             ;;(org-hop-remove-marker candidate)
+             (org-hop-remove-marker candidate)
              (org-hop-add-marker (org-hop-get-marker))))
       (recenter org-hop-recenter))))
 
