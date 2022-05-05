@@ -182,8 +182,7 @@ This function is controlled by the variable `org-hop-files'."
 ;;;; Heading & marker info
 
 (defun org-hop-get-heading (&optional org-file)
-  "Get Org heading at point.
-Optional argument ORG-FILE replaces current buffer file name attribute."
+  "Get Org heading at point data."
   (interactive)
   (let ((file (buffer-file-name))
         (buffer (buffer-name))
@@ -196,15 +195,15 @@ Optional argument ORG-FILE replaces current buffer file name attribute."
                 "/")
                (if (and org-hop-headings-with-tags tags)
                    (format " %s" (org-make-tag-string tags))))
-      (:type      "heading"
-       :file      ,file
-       :buffer    ,buffer
-       :char      ,(point)
-       :line      ,(line-number-at-pos)
-       :marker    nil))))
+      (:type   "heading"
+       :file   ,file
+       :buffer ,buffer
+       :char   ,(point)
+       :line   ,(line-number-at-pos)
+       :marker nil))))
 
 (defun org-hop-get-marker ()
-  "Get current point data."
+  "Get current line at point data."
   (interactive)
   (let* ((file (buffer-file-name))
          (buffer (buffer-name))
@@ -218,7 +217,7 @@ Optional argument ORG-FILE replaces current buffer file name attribute."
        :buffer ,buffer
        :char   ,(point)
        :line   ,line-number
-       :marker  nil))))
+       :marker nil))))
 
 (defun org-hop-file-headings (org-file)
   "Return a list of Org headings from ORG-FILE."
@@ -306,7 +305,7 @@ With optional argument FORCE, rescan all files."
 
 (defun org-hop-add-marker-to-list (&optional verbose)
   "Save current `point-marker' to `org-hop-markers-list'.
-When VERBOSE is non-nil, shows a notification in echo area."
+If VERBOSE is non-nil, show messages in echo area."
   (interactive)
   (let ((item (org-hop-get-marker)))
     (org-hop-add-marker item)
@@ -396,24 +395,27 @@ If VERBOSE is non-nil, show messages in echo area."
 ;;;; Remove items from recent lists
 
 (defmacro org-hop-remove-dups (recent-list)
-  "Remove duplicates from recent list."
+  "Remove duplicates from RECENT-LIST."
   `(setq ,recent-list
          (cl-remove-duplicates ,recent-list
                                :test #'equal :key #'car :from-end t)))
 
 (defmacro org-hop-remove (item list &optional verbose)
-  "Remove an ITEM from a recent from LIST."
+  "Remove an ITEM from a recent from LIST.
+If VERBOSE is non-nil, show messages in echo area."
   `(let ((entry (rassoc ,item ,list)))
      (setq ,list (remove entry ,list))
      (when (or ,verbose (called-interactively-p 'any))
        (message (format "Removed from recent list: %s" (car entry))))))
 
 (defun org-hop-remove-heading (item &optional verbose)
-  "Remove ITEM from recent headings list."
+  "Remove ITEM from recent headings list.
+If VERBOSE is non-nil, show messages in echo area."
   (org-hop-remove item org-hop-headings-list verbose))
 
 (defun org-hop-remove-marker (item &optional verbose)
-  "Remove ITEM from recent marker list."
+  "Remove ITEM from recent marker list.
+If VERBOSE is non-nil, show messages in echo area."
   (org-hop-remove item org-hop-markers-list verbose))
 
 (defmacro org-hop-remove-from-list (recent-list &optional arg)
