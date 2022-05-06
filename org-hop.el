@@ -132,11 +132,11 @@ It might considerably slow down file reading times."
 
 (defvar org-hop-pre-hop-hook
   '(org-hop-mark-ring-push)
-  "Hook run before the hop.")
+  "Hook run before hopping to heading or line.")
 
 (defvar org-hop-post-hop-hook
   '(org-hop-focus-entry org-hop-add-entry-at-point)
-  "Hook run after the hop.")
+  "Hook run after hopping to heading or line.")
 
 
 ;;;; Org files
@@ -191,7 +191,7 @@ This function is controlled by the variable `org-hop-files'."
 ;;;; Heading & line data
 
 (defun org-hop-format-heading (buffer path)
-  "Format heading title."
+  "Format heading title info from BUFFER and Org heading PATH."
   (let ((keyword (if org-hop-headings-with-todo-prefix (org-get-todo-state)))
         (heading (org-format-outline-path path org-hop-headings-width))
         (tags    (if org-hop-headings-with-tags (org-get-tags))))
@@ -215,7 +215,7 @@ This function is controlled by the variable `org-hop-files'."
               :char   ,char))))
 
 (defun org-hop-format-line (buffer line-number)
-  "Format line title."
+  "Format line title info from BUFFER and LINE-NUMBER."
   (let ((line         (thing-at-point 'line)))
     (replace-regexp-in-string
      "\n" "" (format "%s:%s %s" buffer line-number line))))
@@ -345,7 +345,7 @@ With optional argument FORCE, rescan all files."
          (line        (plist-get coordinates :line))
          (char        (plist-get coordinates :char)))
     (if (not (buffer-live-p buffer))
-        (org-hop-remove-missing buffer entry)
+        (org-hop-remove-missing entry buffer)
       (run-hooks 'org-hop-pre-hop-hook)
       (org-hop-to-buffer buffer)
       (org-hop-to-char-or-line char line)
@@ -426,8 +426,8 @@ If VERBOSE is non-nil, show messages in echo area."
 If VERBOSE is non-nil, show messages in echo area."
   (org-hop-remove entry-data org-hop-lines-list verbose))
 
-(defun org-hop-remove-missing (buffer entry)
-  "Remove entry when buffer has been killed."
+(defun org-hop-remove-missing (entry buffer)
+  "Remove ENTRY when BUFFER has been killed."
   (ignore-errors
     (org-hop-remove entry org-hop-headings-list)
     (org-hop-remove entry org-hop-lines-list))
