@@ -58,7 +58,7 @@
   :group 'helm-org-hop
   :type '(alist :key-type string :value-type function))
 
-(defcustom helm-org-hop-recent-actions
+(defcustom helm-org-hop-recent-headings-actions
   '(("Hop to heading"                     . org-hop-to-entry)
     ("Store link to heading    `C-c l`"   . helm-org-hop-headings-store-link)
     ("Insert link to heading   `C-c C-l`" . helm-org-hop-headings-insert-link)
@@ -67,12 +67,12 @@
   :group 'helm-org-hop
   :type '(alist :key-type string :value-type function))
 
-(defcustom helm-org-hop-marker-actions
-  '(("Hop to marker"                     . org-hop-to-entry)
-    ("Store link to marker    `C-c l`"   . helm-org-hop-marker-store-link)
-    ("Insert link to marker   `C-c C-l`" . helm-org-hop-marker-insert-link)
-    ("Remove marker from list `M-D`"     . helm-org-hop-remove-marker))
-  "Default actions alist for `helm-org-hop-markers-source'."
+(defcustom helm-org-hop-lines-actions
+  '(("Hop to line"                     . org-hop-to-entry)
+    ("Store link to line    `C-c l`"   . helm-org-hop-lines-store-link)
+    ("Insert link to line   `C-c C-l`" . helm-org-hop-lines-insert-link)
+    ("Remove line from list `M-D`"     . helm-org-hop-remove-line))
+  "Default actions alist for `helm-org-hop-lines-source'."
   :group 'helm-org-hop
   :type '(alist :key-type string :value-type function))
 
@@ -83,7 +83,7 @@
   :type '(alist :key-type string :value-type function))
 
 (defcustom helm-org-hop-default-sources '(helm-org-hop-headings-source
-                                          helm-org-hop-markers-source
+                                          helm-org-hop-lines-source
                                           helm-org-hop-all-headings-source
                                           helm-org-hop-capture-source)
   "Default sources list used in `helm-org-hop'."
@@ -99,8 +99,8 @@
 (defvar helm-org-hop-headings-source nil
   "Helm source for `org-hop-headings-list'.")
 
-(defvar helm-org-hop-markers-source nil
-  "Helm source for `org-hop-markers-list'.")
+(defvar helm-org-hop-lines-source nil
+  "Helm source for `org-hop-lines-list'.")
 
 (defvar helm-org-hop-capture-source nil
   "Helm source for note capturing.")
@@ -110,32 +110,34 @@
 
 (defun helm-org-hop-remove (type)
   "Remove candidates in variable `helm-marked-candidates' from recent list.
-Argument TYPE indicates if candidate is a 'heading or 'marker."
+Argument TYPE indicates if candidate is a 'heading or 'line."
   (let* ((num (length (helm-marked-candidates)))
          (verbose (eq num 1)))
-    (dolist (item (helm-marked-candidates))
+    (dolist (entry-data (helm-marked-candidates))
       (if (eq type 'heading)
-          (org-hop-remove-heading item verbose)
-        (org-hop-remove-marker item verbose)))
+          (org-hop-remove-heading entry-data verbose)
+        (org-hop-remove-line entry-data verbose)))
     (if (> num 1)
         (message (format "Removed %s entries from %s list." num type)))))
 
 (defun helm-org-hop-insert-link (type)
   "Insert Org links to candidates in variable `helm-marked-candidates'.
-Argument TYPE indicates if candidate is a 'heading or 'marker."
+Argument TYPE indicates if candidate is a 'heading or 'line."
   (let ((org-link-file-path-type 'absolute)
+        (current-buffer (current-buffer))
         (point (point))
         (num (length (helm-marked-candidates))))
-    (dolist (item (reverse (helm-marked-candidates)))
-      (let ((entry (org-hop-get-coordinates item)))
+    (dolist (entry-data (reverse (helm-marked-candidates)))
+      (let ((entry (org-hop-get-coordinates entry-data)))
         (when entry
           (with-current-buffer (plist-get entry :buffer)
-            (org-hop-goto-char-or-line (plist-get entry :char)
-                                       (plist-get entry :line))
+            (org-hop-to-char-or-line (plist-get entry :char)
+                                     (plist-get entry :line))
             (let ((inhibit-message t))
               (if (eq type 'heading)
                   (call-interactively 'org-store-link)
-                (helm-org-hop-store-marker-link)))))))
+                (helm-org-hop-store-line-link)))))))
+    (switch-to-buffer current-buffer)
     (goto-char point)
     (if (> num 1)
         (org-insert-all-links num "- " "\n")
@@ -143,33 +145,34 @@ Argument TYPE indicates if candidate is a 'heading or 'marker."
 
 (defun helm-org-hop-store-link (type)
   "Store Org links to candidates in variable `helm-marked-candidates'.
-Argument TYPE indicates if candidate is a 'heading or 'marker."
-  (let ((point (point))
+Argument TYPE indicates if candidate is a 'heading or 'line."
+  (let ((current-buffer (current-buffer))
+        (point (point))
         (num (length (helm-marked-candidates))))
-    (dolist (item (helm-marked-candidates))
-      (let ((entry (org-hop-get-coordinates item)))
+    (dolist (entry-data (helm-marked-candidates))
+      (let ((entry (org-hop-get-coordinates entry-data)))
         (when entry
           (with-current-buffer (plist-get entry :buffer)
-            (org-hop-goto-char-or-line (plist-get entry :char)
-                                       (plist-get entry :line))
+            (org-hop-to-char-or-line (plist-get entry :char)
+                                     (plist-get entry :line))
             (if (eq type 'heading)
                 (call-interactively 'org-store-link)
-              (helm-org-hop-store-marker-link))))))
+              (helm-org-hop-store-line-link))))))
+    (switch-to-buffer current-buffer)
     (goto-char point)
     (if (> num 1)
         (message (format "Stored %s links" num)))))
 
-(defun helm-org-hop-store-marker-link ()
+(defun helm-org-hop-store-line-link ()
   "Store custom Org links to candidates in variable `helm-marked-candidates'."
-  (let* ((file (buffer-file-name))
-         (filename (file-name-nondirectory file))
-         (line (line-number-at-pos)))
-         ;;(line (org-link--normalize-string (org-current-line-string) t)))
+  (let* ((file        (buffer-file-name))
+         (filename    (file-name-nondirectory file))
+         (line-number (line-number-at-pos)))
     (add-to-list 'org-stored-links
-                 `(,(format "file:%s::%s" file line)
-                   ,(format "%s:%s" filename line))
+                 `(,(format "file:%s::%s" file line-number)
+                   ,(format "%s:%s" filename line-number))
                  t)
-    (message "Stored link for %s:%s" filename line)))
+    (message "Stored link for %s:%s" filename line-number)))
 
 
 ;;;;; Headings actions
@@ -190,22 +193,22 @@ Argument TYPE indicates if candidate is a 'heading or 'marker."
   (helm-org-hop-remove 'heading))
 
 
-;;;;; Markers actions
+;;;;; Lines actions
 
-(defun helm-org-hop-marker-store-link (&optional candidate)
+(defun helm-org-hop-lines-store-link (&optional candidate)
   "Helm action to store an Org link to CANDIDATE."
   (ignore candidate)
-  (helm-org-hop-store-link 'marker))
+  (helm-org-hop-store-link 'line))
 
-(defun helm-org-hop-marker-insert-link (&optional candidate)
+(defun helm-org-hop-lines-insert-link (&optional candidate)
   "Helm action to insert an Org link to CANDIDATE."
   (ignore candidate)
-  (helm-org-hop-insert-link 'marker))
+  (helm-org-hop-insert-link 'line))
 
-(defun helm-org-hop-remove-marker (&optional candidate)
+(defun helm-org-hop-remove-line (&optional candidate)
   "Helm action to remove CANDIDATE from recent list."
   (ignore candidate)
-  (helm-org-hop-remove 'marker))
+  (helm-org-hop-remove 'line))
 
 
 ;;;;; Capture actions
@@ -236,23 +239,23 @@ Argument TYPE indicates if candidate is a 'heading or 'marker."
   (with-helm-alive-p
     (helm-exit-and-execute-action 'helm-org-hop-remove-heading)))
 
-(defun helm-org-hop-run-marker-store-link ()
-  "Run interactively `helm-org-hop-marker-store-link'."
+(defun helm-org-hop-run-line-store-link ()
+  "Run interactively `helm-org-hop-lines-store-link'."
   (interactive)
   (with-helm-alive-p
-    (helm-exit-and-execute-action 'helm-org-hop-marker-store-link)))
+    (helm-exit-and-execute-action 'helm-org-hop-lines-store-link)))
 
-(defun helm-org-hop-run-marker-insert-link ()
-  "Run interactively `helm-org-hop-marker-insert-link'."
+(defun helm-org-hop-run-lines-insert-link ()
+  "Run interactively `helm-org-hop-lines-insert-link'."
   (interactive)
   (with-helm-alive-p
-    (helm-exit-and-execute-action 'helm-org-hop-marker-insert-link)))
+    (helm-exit-and-execute-action 'helm-org-hop-lines-insert-link)))
 
-(defun helm-org-hop-run-remove-marker ()
-  "Run interactively `helm-org-hop-remove-marker'."
+(defun helm-org-hop-run-remove-line ()
+  "Run interactively `helm-org-hop-remove-line'."
   (interactive)
   (with-helm-alive-p
-    (helm-exit-and-execute-action 'helm-org-hop-remove-marker)))
+    (helm-exit-and-execute-action 'helm-org-hop-remove-line)))
 
 (defvar helm-org-hop-headings-map
   (let ((map (make-sparse-keymap)))
@@ -262,7 +265,7 @@ Argument TYPE indicates if candidate is a 'heading or 'marker."
     map)
   "Keymap for `helm-org-hop-all-headings-source'.")
 
-(defvar helm-org-hop-recent-map
+(defvar helm-org-hop-recent-headings-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-map)
     (define-key map (kbd "C-c l")   'helm-org-hop-run-headings-store-link)
@@ -271,14 +274,14 @@ Argument TYPE indicates if candidate is a 'heading or 'marker."
     map)
   "Keymap for `helm-org-hop-headings-source'.")
 
-(defvar helm-org-hop-marker-map
+(defvar helm-org-hop-lines-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-map)
-    (define-key map (kbd "C-c l")   'helm-org-hop-run-marker-store-link)
-    (define-key map (kbd "C-c C-l") 'helm-org-hop-run-marker-insert-link)
-    (define-key map (kbd "M-D")     'helm-org-hop-run-remove-marker)
+    (define-key map (kbd "C-c l")   'helm-org-hop-run-line-store-link)
+    (define-key map (kbd "C-c C-l") 'helm-org-hop-run-lines-insert-link)
+    (define-key map (kbd "M-D")     'helm-org-hop-run-remove-line)
     map)
-  "Keymap for `helm-org-hop-markers-source'.")
+  "Keymap for `helm-org-hop-lines-source'.")
 
 (defun helm-org-hop-build-sources (&optional force)
   "Build Helm sources for all lists.
@@ -286,15 +289,15 @@ Optional argument FORCE will reset all lists."
   (when force (org-hop-reset))
   (setq helm-org-hop-headings-source
         (helm-build-sync-source "Recent Org headings: "
-          :action 'helm-org-hop-recent-actions
-          :keymap helm-org-hop-recent-map
+          :action 'helm-org-hop-recent-headings-actions
+          :keymap helm-org-hop-recent-headings-map
           :candidates org-hop-headings-list))
 
-  (setq helm-org-hop-markers-source
-        (helm-build-sync-source "Hop to marker: "
-          :action 'helm-org-hop-marker-actions
-          :keymap helm-org-hop-marker-map
-          :candidates org-hop-markers-list))
+  (setq helm-org-hop-lines-source
+        (helm-build-sync-source "Hop to line: "
+          :action 'helm-org-hop-lines-actions
+          :keymap helm-org-hop-lines-map
+          :candidates org-hop-lines-list))
 
   (setq helm-org-hop-all-headings-source
         (helm-build-sync-source "Org headings: "
