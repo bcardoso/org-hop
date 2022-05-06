@@ -39,22 +39,24 @@ Or, with use-package + straight.el:
 
 ** Usage
 
-Just run =M-x org-hop= or with the suggested binding =C-c h=.
+Just run =M-x org-hop= or with the suggested binding =C-c h=. If you are a Helm user, =M-x helm-org-hop= or =C-c j=.
 
-Or, if you are a Helm user, =M-x helm-org-hop= or =C-c j=.
+Either way, =org-hop= will build a list with all findable Org headings (see next section). Additionally, you can store markers to any Org heading or buffer line with the following commands:
 
-Additionally, you can store markers to any file or buffer with =M-x org-hop-add-marker-to-list= or =M-x org-hop-add-heading-or-marker=.
+- =org-hop-add-heading-to-list=
+- =org-hop-add-line-to-list=
+- =org-hop-add-heading-or-line=
 
-With the =helm-org-hop= interface, besides hopping, you can store/insert a link to a heading or a marker, and remove them from the recent list.
+With the =helm-org-hop= interface, besides hopping, you can store/insert a link to a heading or a line marker, and remove them from the recent list.
 
 The =org-hop-recent-mode= keeps track of the headings you spend some time in (see =org-hop-recent-idle-interval=).
 
-The recent headings and markers are shown at the top of the general headings list. To remove them, use =M-x org-hop-remove-heading-from-list= or =M-x org-hop-remove-marker-from-list=.
+The recent headings and line markers are shown at the top of the general headings list. To remove them, use =M-x org-hop-remove-heading-from-list= or =M-x org-hop-remove-line-from-list=.
 
 
 ** Customization
 
-The main customizable variables are accessible through the customize interface:
+The customizable variables are accessible through the customize interface:
 
 - =M-x customize-group RET org-hop=
 - =M-x customize-group RET helm-org-hop=
@@ -63,22 +65,20 @@ The main customizable variables are accessible through the customize interface:
 By default, =org-hop= will scan all open Org buffers. You can also edit the variables =org-hop-files= and =org-hop-files-extra= to a group of specific files:
 
 #+begin_src emacs-lisp
-;; the list of open Org buffers (default)
-(setq org-hop-files 'buffers)
+(setq org-hop-files 'buffers)        ;; the list of open Org buffers (default)
 
-;; the list of Org agenda files
-(setq org-hop-files 'agenda)
+(setq org-hop-files 'agenda)         ;; the list of Org agenda files
 
-;; the list of Org agenda files + open Org buffers
-(setq org-hop-files 'org-files-list)
+(setq org-hop-files 'org-files-list) ;; Org agenda files + open Org buffers
 
-;; a custom list of Org files
-(setq org-hop-files '("x.org" "y.org" "z.org"))
+(setq org-hop-files
+      '("x.org" "y.org" "z.org"))    ;; a custom list of Org files
 
-;; the list of Org agenda files + a custom list
-;; (the extra files' headings will appear on top)
-(setq org-hop-files       'agenda
-      org-hop-files-extra '("x.org" "y.org"))
+
+;; Example: the Org agenda files + a custom list, and some list to ignore
+(setq org-hop-files        'agenda
+      org-hop-files-extra  '("a.org" "b.org")
+      org-hop-files-ignore '("some-boring-file.org" "etc.org"))
 #+end_src
 
 Use the variable =org-hop-files-ignore= to specify a list of Org files that should be ignored.

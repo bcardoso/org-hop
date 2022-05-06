@@ -1,4 +1,4 @@
-;;; org-hop.el --- Hop to Org headings -*- lexical-binding: t -*-
+;;; org-hop.el --- Hop to Org headings and lines -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2022 Bruno Cardoso
 
@@ -24,7 +24,7 @@
 
 ;;; Commentary:
 
-;; An interface to hop to Org headings and markers.
+;; An interface to hop to Org headings and lines.
 
 ;;; Code:
 
