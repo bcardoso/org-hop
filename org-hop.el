@@ -344,12 +344,8 @@ With optional argument FORCE, rescan all files."
          (buffer      (plist-get coordinates :buffer))
          (line        (plist-get coordinates :line))
          (char        (plist-get coordinates :char)))
-    (if (not buffer)
-        (progn
-          (message "Buffer %s vanished." buffer)
-          (ignore-errors
-            (org-hop-remove entry org-hop-headings-list)
-            (org-hop-remove entry org-hop-lines-list)))
+    (if (not (buffer-live-p buffer))
+        (org-hop-remove-missing buffer entry)
       (run-hooks 'org-hop-pre-hop-hook)
       (org-hop-to-buffer buffer)
       (org-hop-to-char-or-line char line)
@@ -429,6 +425,14 @@ If VERBOSE is non-nil, show messages in echo area."
   "Remove ENTRY-DATA from recent lines list.
 If VERBOSE is non-nil, show messages in echo area."
   (org-hop-remove entry-data org-hop-lines-list verbose))
+
+(defun org-hop-remove-missing (buffer entry)
+  "Remove entry when buffer has been killed."
+  (ignore-errors
+    (org-hop-remove entry org-hop-headings-list)
+    (org-hop-remove entry org-hop-lines-list))
+  (message "Buffer %s vanished." buffer))
+
 
 
 ;;;;; Interactively remove entries
