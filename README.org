@@ -39,7 +39,9 @@ Or, with use-package + straight.el:
 
 ** Usage
 
-Just run =M-x org-hop= or with the suggested binding =C-c h=. If you are a Helm user, =M-x helm-org-hop= or =C-c j=.
+Just run =M-x org-hop= or with the suggested binding =C-c h=.
+
+If you are a Helm user, =M-x helm-org-hop= or =C-c j=.
 
 Either way, =org-hop= will build a list with all findable Org headings (see next section). Additionally, you can store markers to any Org heading or buffer line with the following commands:
 
@@ -51,7 +53,7 @@ With the =helm-org-hop= interface, besides hopping, you can store/insert a link 
 
 The =org-hop-recent-mode= keeps track of the headings you spend some time in (see =org-hop-recent-idle-interval=).
 
-The recent headings and line markers are shown at the top of the general headings list. To remove them, use =M-x org-hop-remove-heading-from-list= or =M-x org-hop-remove-line-from-list=.
+Recent headings and line markers are shown at the top of the general headings list. To remove them, run =M-x org-hop-remove-heading-from-list= or =M-x org-hop-remove-line-from-list=.
 
 
 ** Customization
@@ -75,7 +77,7 @@ By default, =org-hop= will scan all open Org buffers. You can also edit the vari
       '("x.org" "y.org" "z.org"))    ;; a custom list of Org files
 
 
-;; Example: the Org agenda files + a custom list, and some list to ignore
+;; Example: the Org agenda files + a custom list, and some files to ignore
 (setq org-hop-files        'agenda
       org-hop-files-extra  '("a.org" "b.org")
       org-hop-files-ignore '("some-boring-file.org" "etc.org"))
