@@ -147,17 +147,13 @@ It might considerably slow down file reading times."
         org-hop-headings-list nil
         org-hop-lines-list    nil))
 
-;;  FIXME: review
 (defun org-hop-file-attr-modified (file &optional buffer-modified)
   "Return FILE modification time attribute in seconds.
-When BUFFER-MODIFIED is non-nil, return current time if the buffer
-visiting FILE was modified since its file was last read or saved."
-  (let ((modtime (string-to-number (format-time-string
-                                    "%s"
-                                    (file-attribute-modification-time
-                                     (file-attributes file))))))
-    (if (and buffer-modified
-             (buffer-modified-p (find-buffer-visiting file)))
+When BUFFER-MODIFIED is non-nil and buffer visiting FILE was modified
+since its file was last read or saved, always update its cache."
+  (let* ((fmodtime (file-attribute-modification-time (file-attributes file)))
+         (modtime (string-to-number (format-time-string "%s" fmodtime))))
+    (if (and buffer-modified (buffer-modified-p (find-buffer-visiting file)))
         (1+ org-hop-last-update)
       modtime)))
 
