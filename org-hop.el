@@ -192,9 +192,11 @@ This function is controlled by the variable `org-hop-files'."
 
 (defun org-hop-format-heading (buffer path)
   "Format heading title info from BUFFER and Org heading PATH."
-  (let ((keyword (if org-hop-headings-with-todo-prefix (org-get-todo-state)))
+  (let ((keyword (if org-hop-headings-with-todo-prefix
+                     (org-get-todo-state)))
         (heading (org-format-outline-path path org-hop-headings-width))
-        (tags    (if org-hop-headings-with-tags (org-get-tags))))
+        (tags    (if org-hop-headings-with-tags
+                     (org-make-tag-string (org-get-tags)))))
     (concat (if keyword (format "#%s " keyword))
             (if org-hop-headings-with-filename (format "%s:/" buffer))
             heading
