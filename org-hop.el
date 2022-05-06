@@ -138,12 +138,13 @@ If non-nil, update cache for file if its buffer was modified since last scan."
   "Return FILE modification time attribute in seconds.
 When BUFFER-MODIFIED is non-nil, return current time if the buffer
 visiting FILE was modified since its file was last read or saved."
-  (string-to-number
-   (if (and buffer-modified (buffer-modified-p (find-buffer-visiting file)))
-       (format-time-string "%s")
-     (format-time-string
-      "%s"
-      (file-attribute-modification-time (file-attributes file))))))
+  (let ((modtime (string-to-number (format-time-string
+                                    "%s"
+                                    (file-attribute-modification-time
+                                     (file-attributes file))))))
+    (if (and buffer-modified (buffer-modified-p (find-buffer-visiting file)))
+        (1+ org-hop-last-scan)
+      modtime)))
 
 (defun org-hop-files-truename (files)
   "Return the truenames of a list of FILES."
