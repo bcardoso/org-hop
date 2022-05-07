@@ -347,7 +347,7 @@ With optional argument FORCE, rescan all files."
          (line        (plist-get coordinates :line))
          (char        (plist-get coordinates :char)))
     (if (not (buffer-live-p buffer))
-        (org-hop-remove-missing entry buffer)
+        (org-hop-remove-missing entry)
       (run-hooks 'org-hop-pre-hop-hook)
       (org-hop-to-buffer buffer)
       (org-hop-to-char-or-line char line)
@@ -428,12 +428,12 @@ If VERBOSE is non-nil, show messages in echo area."
 If VERBOSE is non-nil, show messages in echo area."
   (org-hop-remove entry-data org-hop-lines-list verbose))
 
-(defun org-hop-remove-missing (entry buffer)
-  "Remove ENTRY when BUFFER has been killed."
+(defun org-hop-remove-missing (entry)
+  "Remove ENTRY when missing buffer or marker."
   (ignore-errors
     (org-hop-remove entry org-hop-headings-list)
     (org-hop-remove entry org-hop-lines-list))
-  (message "Buffer %s vanished." buffer))
+  (message "Buffer or heading vanished."))
 
 
 
