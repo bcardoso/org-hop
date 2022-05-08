@@ -301,14 +301,16 @@ With optional argument FORCE, rescan all files."
   (let* ((case-fold-search nil)
          (file   (plist-get (car entry) :file))
          (buffer (or (plist-get (car entry) :buffer)
-                     (find-buffer-visiting file)
-                     (find-file-noselect file)))
+                     (find-buffer-visiting file)))
          (line   (plist-get (car entry) :line))
          (char   (plist-get (car entry) :char))
          (path   (plist-get (car entry) :path))
-         (olp    (if path (save-excursion (switch-to-buffer buffer)
-                                          (ignore-errors
-                                            (org-find-olp path t))))))
+         (olp))
+    (if (not (buffer-live-p buffer))
+        (setq buffer (find-file-noselect file)))
+    (setq olp (if path
+                  (save-excursion (switch-to-buffer buffer)
+                                  (ignore-errors (org-find-olp path t)))))
     (when olp
       (setq buffer (marker-buffer olp))
       (setq char   (marker-position olp)))
