@@ -109,12 +109,6 @@ If non-nil, update cache for file if its buffer was modified since last scan."
   :group 'org-hop
   :type 'boolean)
 
-(defcustom org-hop-font-lock-ensure nil
-  "If non-nil, make sure whole buffer is properly fontified.
-It might considerably slow down file reading times."
-  :group 'org-hop
-  :type 'boolean)
-
 
 ;;;; Variables
 
@@ -244,9 +238,8 @@ This function is controlled by the variable `org-hop-files'."
         (buffer-point nil))
     (with-current-buffer (find-file-noselect org-file)
       (setq buffer-point (point))
+      (widen)
       (goto-char (point-min))
-      (if org-hop-font-lock-ensure
-          (org-font-lock-ensure (point-min) (point-max)))
       (while (re-search-forward org-heading-regexp nil t)
         (cl-pushnew (org-hop-get-heading) org-file-headings :test #'equal))
       (goto-char buffer-point))
@@ -337,7 +330,6 @@ With optional argument FORCE, rescan all files."
   "Proper focus selected entry."
   (when (and (eq major-mode 'org-mode) (org-at-heading-p))
     (goto-char (point-at-bol))
-    (org-fold-show-context)
     (org-fold-show-entry)
     (org-fold-show-children))
   (recenter org-hop-recenter))
