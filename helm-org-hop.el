@@ -290,18 +290,21 @@ Optional argument FORCE will reset all lists."
   (when force (org-hop-reset))
   (setq helm-org-hop-headings-source
         (helm-build-sync-source "Recent Org headings: "
+          :diacritics helm-mode-ignore-diacritics
           :action 'helm-org-hop-recent-headings-actions
           :keymap helm-org-hop-recent-headings-map
           :candidates org-hop-headings-list))
 
   (setq helm-org-hop-lines-source
         (helm-build-sync-source "Hop to line: "
+          :diacritics helm-mode-ignore-diacritics
           :action 'helm-org-hop-lines-actions
           :keymap helm-org-hop-lines-map
           :candidates org-hop-lines-list))
 
   (setq helm-org-hop-all-headings-source
         (helm-build-sync-source "Org headings: "
+          :diacritics helm-mode-ignore-diacritics
           :action 'helm-org-hop-headings-actions
           :keymap helm-org-hop-headings-map
           :candidates (org-hop-all-headings force)))
