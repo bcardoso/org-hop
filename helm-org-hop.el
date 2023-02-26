@@ -284,30 +284,35 @@ Argument TYPE indicates if candidate is a 'heading or 'line."
     map)
   "Keymap for `helm-org-hop-lines-source'.")
 
-(defun helm-org-hop-build-sources (&optional force)
+(defmacro helm-org-hop-build-source (name action keymap candidates)
+  "Macro for building the Helm sources."
+  `(helm-build-sync-source ,name
+     :diacritics helm-mode-ignore-diacritics
+     :action ,action
+     :keymap ,keymap
+     :candidates ,candidates))
+
+(defun helm-org-hop-build-all-sources (&optional force)
   "Build Helm sources for all lists.
 Optional argument FORCE will reset all lists."
   (when force (org-hop-reset))
   (setq helm-org-hop-headings-source
-        (helm-build-sync-source "Recent Org headings: "
-          :diacritics helm-mode-ignore-diacritics
-          :action 'helm-org-hop-recent-headings-actions
-          :keymap helm-org-hop-recent-headings-map
-          :candidates org-hop-headings-list))
+        (helm-org-hop-build-source "Recent Org headings: "
+                                   helm-org-hop-recent-headings-actions
+                                   helm-org-hop-recent-headings-map
+                                   org-hop-headings-list))
 
   (setq helm-org-hop-lines-source
-        (helm-build-sync-source "Hop to line: "
-          :diacritics helm-mode-ignore-diacritics
-          :action 'helm-org-hop-lines-actions
-          :keymap helm-org-hop-lines-map
-          :candidates org-hop-lines-list))
+        (helm-org-hop-build-source "Hop to line: "
+                                   helm-org-hop-lines-actions
+                                   helm-org-hop-lines-map
+                                   org-hop-lines-list))
 
   (setq helm-org-hop-all-headings-source
-        (helm-build-sync-source "Org headings: "
-          :diacritics helm-mode-ignore-diacritics
-          :action 'helm-org-hop-headings-actions
-          :keymap helm-org-hop-headings-map
-          :candidates (org-hop-all-headings force)))
+        (helm-org-hop-build-source "Org headings: "
+                                   helm-org-hop-headings-actions
+                                   helm-org-hop-headings-map
+                                   (org-hop-all-headings force)))
 
   (setq helm-org-hop-capture-source
         (helm-build-dummy-source "Create note"
@@ -318,7 +323,7 @@ Optional argument FORCE will reset all lists."
   "Helm for Org headings.
 With optional argument ARG, reset all lists."
   (interactive "P")
-  (helm-org-hop-build-sources arg)
+  (helm-org-hop-build-all-sources arg)
   (helm :buffer "*helm-org-hop*"
         :ff-transformer-show-only-basename nil
         :sources helm-org-hop-default-sources))
