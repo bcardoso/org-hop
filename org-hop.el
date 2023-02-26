@@ -104,8 +104,13 @@ relative to the selected window.  See `recenter'."
   :type 'integer)
 
 (defcustom org-hop-update-cache-if-buffer-modified nil
-  "If nil, update cache for file if it was modified (saved) since last scan.
-If non-nil, update cache for file if its buffer was modified since last scan."
+  "If nil, update file cache if it was modified (saved) since last scan.
+If non-nil, update file cache if its *buffer* was modified since last scan."
+  :group 'org-hop
+  :type 'boolean)
+
+(defcustom org-hop-update-cache-verbose nil
+  "When non-nil, show messages in echo area when cache is being updated."
   :group 'org-hop
   :type 'boolean)
 
@@ -266,13 +271,16 @@ When FORCE is non-nil, force the scan of all files."
                  (> file-modified-time org-hop-last-update)
                  (not (assoc file org-hop-cache))
                  (not (find-buffer-visiting file)))
-             (message (format "[org-hop] Updating cache for %s..."
-                              (file-name-nondirectory file)))
+             (if org-hop-update-cache-verbose
+                 (message (format "[org-hop] Updating cache for %s..."
+                                  (file-name-nondirectory file))))
              (cl-pushnew `(,file . ,(list (org-hop-get-file-headings file)))
-                         new-cache  :test #'equal))
+                         new-cache :test #'equal))
             (t
              (cl-pushnew (assoc file org-hop-cache)
                          new-cache :test #'equal))))
+    (if org-hop-update-cache-verbose
+        (message "[org-hop] Cache updated."))
     (setq org-hop-cache new-cache)
     (setq org-hop-last-update (string-to-number (format-time-string "%s")))))
 
