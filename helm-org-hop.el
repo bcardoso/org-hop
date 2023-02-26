@@ -328,6 +328,20 @@ With optional argument ARG, reset all lists."
         :ff-transformer-show-only-basename nil
         :sources helm-org-hop-default-sources))
 
+;;;###autoload
+(defun helm-org-hop-current-file ()
+  "Helm for Org headings in current file."
+  (interactive)
+  (if (eq major-mode 'org-mode)
+      (helm :buffer "*helm-org-hop*"
+            :ff-transformer-show-only-basename nil
+            :sources (helm-org-hop-build-source
+                      (format "Org headings for %s: " (buffer-name))
+                      helm-org-hop-headings-actions
+                      helm-org-hop-headings-map
+                      (org-hop-get-file-headings (buffer-file-name))))
+    (message "Not an Org file.")))
+
 
 (provide 'helm-org-hop)
 
