@@ -104,7 +104,7 @@ relative to the selected window.  See `recenter'."
   :type 'integer)
 
 (defcustom org-hop-update-cache-if-buffer-modified nil
-  "If nil, update file cache if it was modified (saved) since last scan.
+  "If nil, update file cache only if it was modified (saved) since last scan.
 If non-nil, update file cache if its *buffer* was modified since last scan."
   :group 'org-hop
   :type 'boolean)
