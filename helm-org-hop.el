@@ -124,8 +124,6 @@ Argument TYPE indicates if candidate is a 'heading or 'line."
   "Insert Org links to candidates in variable `helm-marked-candidates'.
 Argument TYPE indicates if candidate is a 'heading or 'line."
   (let ((org-link-file-path-type 'absolute)
-        (current-buffer (current-buffer))
-        (point (point))
         (num (length (helm-marked-candidates))))
     (save-excursion
       (dolist (entry-data (reverse (helm-marked-candidates)))
@@ -140,27 +138,23 @@ Argument TYPE indicates if candidate is a 'heading or 'line."
                   (helm-org-hop-store-line-link))))))))
     (if (> num 1)
         (org-insert-all-links num "- " "\n")
-      (org-insert-all-links 1 "" ""))
-    (switch-to-buffer current-buffer)
-    (goto-char point)))
+      (org-insert-all-links 1 "" ""))))
 
 (defun helm-org-hop-store-link (type)
   "Store Org links to candidates in variable `helm-marked-candidates'.
 Argument TYPE indicates if candidate is a 'heading or 'line."
-  (let ((current-buffer (current-buffer))
-        (point (point))
+  (let ((org-link-file-path-type 'absolute)
         (num (length (helm-marked-candidates))))
-    (dolist (entry-data (helm-marked-candidates))
-      (let ((entry (org-hop-get-coordinates entry-data)))
-        (when entry
-          (with-current-buffer (plist-get entry :buffer)
-            (org-hop-to-char-or-line (plist-get entry :char)
-                                     (plist-get entry :line))
-            (if (eq type 'heading)
-                (call-interactively 'org-store-link)
-              (helm-org-hop-store-line-link))))))
-    (switch-to-buffer current-buffer)
-    (goto-char point)
+    (save-excursion
+      (dolist (entry-data (helm-marked-candidates))
+        (let ((entry (org-hop-get-coordinates entry-data)))
+          (when entry
+            (with-current-buffer (plist-get entry :buffer)
+              (org-hop-to-char-or-line (plist-get entry :char)
+                                       (plist-get entry :line))
+              (if (eq type 'heading)
+                  (call-interactively 'org-store-link)
+                (helm-org-hop-store-line-link)))))))
     (if (> num 1)
         (message (format "Stored %s links" num)))))
 
