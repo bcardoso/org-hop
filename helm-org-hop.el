@@ -124,7 +124,8 @@ Argument TYPE indicates if candidate is a 'heading or 'line."
   "Insert Org links to candidates in variable `helm-marked-candidates'.
 Argument TYPE indicates if candidate is a 'heading or 'line."
   (let ((org-link-file-path-type 'absolute)
-        (num (length (helm-marked-candidates))))
+        (num (length (helm-marked-candidates)))
+        (current-buffer (current-buffer)))
     (save-excursion
       (dolist (entry-data (reverse (helm-marked-candidates)))
         (let ((entry (org-hop-get-coordinates entry-data)))
@@ -138,7 +139,8 @@ Argument TYPE indicates if candidate is a 'heading or 'line."
                   (helm-org-hop-store-line-link))))))))
     (if (> num 1)
         (org-insert-all-links num "- " "\n")
-      (org-insert-all-links 1 "" ""))))
+      (org-insert-all-links 1 "" ""))
+    (switch-to-buffer current-buffer)))
 
 (defun helm-org-hop-store-link (type)
   "Store Org links to candidates in variable `helm-marked-candidates'.
