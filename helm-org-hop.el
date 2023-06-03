@@ -91,21 +91,6 @@
   :type '(repeat (choice symbol)))
 
 
-;;;; Variables
-
-(defvar helm-org-hop-all-headings-source nil
-  "Helm source for `org-hop-all-headings'.")
-
-(defvar helm-org-hop-headings-source nil
-  "Helm source for `org-hop-headings-list'.")
-
-(defvar helm-org-hop-lines-source nil
-  "Helm source for `org-hop-lines-list'.")
-
-(defvar helm-org-hop-capture-source nil
-  "Helm source for note capturing.")
-
-
 ;;;; Actions
 
 (defun helm-org-hop-remove (type)
@@ -216,7 +201,7 @@ Argument TYPE indicates if candidate is a 'heading or 'line."
   (if helm-org-hop-capture-insert-input (insert input)))
 
 
-;;;;; Helm build sources
+;;;;; Keymaps
 
 (defun helm-org-hop-run-headings-store-link ()
   "Run interactively `helm-org-hop-headings-store-link'."
@@ -280,46 +265,52 @@ Argument TYPE indicates if candidate is a 'heading or 'line."
     map)
   "Keymap for `helm-org-hop-lines-source'.")
 
+
+;;;; Sources
+
 (defmacro helm-org-hop-build-source (name action keymap candidates)
   "Macro for building the Helm sources."
-  `(helm-build-sync-source ,name
+  `(helm-make-source ,name 'helm-source-sync
      :diacritics helm-mode-ignore-diacritics
      :action ,action
      :keymap ,keymap
      :candidates ,candidates))
 
-(defun helm-org-hop-build-all-sources (&optional force)
-  "Build Helm sources for all lists.
-Optional argument FORCE will reset all lists."
-  (when force (org-hop-reset))
-  (setq helm-org-hop-headings-source
-        (helm-org-hop-build-source "Recent Org headings: "
-                                   helm-org-hop-recent-headings-actions
-                                   helm-org-hop-recent-headings-map
-                                   org-hop-headings-list))
+(defvar helm-org-hop-all-headings-source
+  (helm-org-hop-build-source "Org headings: "
+                             helm-org-hop-headings-actions
+                             helm-org-hop-headings-map
+                             (lambda () (org-hop-all-headings)))
+  "Helm source for `org-hop-all-headings'.")
 
-  (setq helm-org-hop-lines-source
-        (helm-org-hop-build-source "Hop to line: "
-                                   helm-org-hop-lines-actions
-                                   helm-org-hop-lines-map
-                                   org-hop-lines-list))
+(defvar helm-org-hop-headings-source
+  (helm-org-hop-build-source "Recent Org headings: "
+                             helm-org-hop-recent-headings-actions
+                             helm-org-hop-recent-headings-map
+                             (lambda () org-hop-headings-list))
+  "Helm source for `org-hop-headings-list'.")
 
-  (setq helm-org-hop-all-headings-source
-        (helm-org-hop-build-source "Org headings: "
-                                   helm-org-hop-headings-actions
-                                   helm-org-hop-headings-map
-                                   (org-hop-all-headings force)))
+(defvar helm-org-hop-lines-source
+  (helm-org-hop-build-source "Hop to line: "
+                             helm-org-hop-lines-actions
+                             helm-org-hop-lines-map
+                             (lambda () org-hop-lines-list))
+  "Helm source for `org-hop-lines-list'.")
 
-  (setq helm-org-hop-capture-source
-        (helm-build-dummy-source "Create note"
-          :action 'helm-org-hop-capture-actions)))
+(defvar helm-org-hop-capture-source
+  (helm-build-dummy-source "Create note"
+    :action 'helm-org-hop-capture-actions)
+  "Helm source for note capturing.")
+
+
+;;;; Commands
 
 ;;;###autoload
 (defun helm-org-hop (&optional arg)
   "Helm for Org headings.
 With optional argument ARG, reset all lists."
   (interactive "P")
-  (helm-org-hop-build-all-sources arg)
+  (when arg (org-hop-reset))
   (helm :buffer "*helm-org-hop*"
         :ff-transformer-show-only-basename nil
         :sources helm-org-hop-default-sources))
