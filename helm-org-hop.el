@@ -316,9 +316,11 @@ With optional argument ARG, reset all lists."
         :sources helm-org-hop-default-sources))
 
 ;;;###autoload
-(defun helm-org-hop-current-file ()
-  "Helm for Org headings in current file."
-  (interactive)
+(defun helm-org-hop-current-file (&optional arg)
+  "Helm for Org headings in current file.
+With optional argument ARG, switch to another buffer first."
+  (interactive "P")
+  (when arg (call-interactively #'switch-to-buffer))
   (if (eq major-mode 'org-mode)
       (helm :buffer "*helm-org-hop*"
             :ff-transformer-show-only-basename nil
