@@ -95,7 +95,7 @@
 
 (defun helm-org-hop-remove (type)
   "Remove candidates in variable `helm-marked-candidates' from recent list.
-Argument TYPE indicates if candidate is a 'heading or 'line."
+Argument TYPE indicates if candidate is a \\='heading or \\='line."
   (let* ((num (length (helm-marked-candidates)))
          (verbose (eq num 1)))
     (dolist (entry-data (helm-marked-candidates))
@@ -107,7 +107,7 @@ Argument TYPE indicates if candidate is a 'heading or 'line."
 
 (defun helm-org-hop-insert-link (type)
   "Insert Org links to candidates in variable `helm-marked-candidates'.
-Argument TYPE indicates if candidate is a 'heading or 'line."
+Argument TYPE indicates if candidate is a \\='heading or \\='line."
   (let ((org-link-file-path-type 'absolute)
         (num (length (helm-marked-candidates)))
         (current-buffer (current-buffer)))
@@ -129,7 +129,7 @@ Argument TYPE indicates if candidate is a 'heading or 'line."
 
 (defun helm-org-hop-store-link (type)
   "Store Org links to candidates in variable `helm-marked-candidates'.
-Argument TYPE indicates if candidate is a 'heading or 'line."
+Argument TYPE indicates if candidate is a \\='heading or \\='line."
   (let ((org-link-file-path-type 'absolute)
         (num (length (helm-marked-candidates))))
     (save-excursion
@@ -267,6 +267,8 @@ Argument TYPE indicates if candidate is a 'heading or 'line."
 
 
 ;;;; Sources
+
+(eval-when-compile (defvar helm-mode-ignore-diacritics))
 
 (defmacro helm-org-hop-build-source (name action keymap candidates)
   "Macro for building the Helm sources."
