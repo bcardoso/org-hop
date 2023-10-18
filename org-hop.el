@@ -146,6 +146,12 @@ If non-nil, update file cache if its *buffer* was modified since last scan."
         org-hop-headings-list nil
         org-hop-lines-list    nil))
 
+(defun org-hop-reset-recent ()
+  "Reset recent lists."
+  (interactive)
+  (setq org-hop-headings-list nil
+        org-hop-lines-list    nil))
+
 (defun org-hop-file-attr-modified (file &optional buffer-modified)
   "Return FILE modification time attribute in seconds.
 When BUFFER-MODIFIED is non-nil and buffer visiting FILE was modified
