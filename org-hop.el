@@ -154,15 +154,14 @@ This function is controlled by the variable `org-hop-files'."
             (when tags (format " %s" tags)))))
 
 (defun org-hop-format-line (buffer line-number)
-  "Format line title info from BUFFER and LINE-NUMBER."
-  (let ((line         (thing-at-point 'line)))
-    (replace-regexp-in-string
-     "\n" "" (format "%s:%s %s" buffer line-number line))))
+  "Format line title info for BUFFER and LINE-NUMBER."
+  (replace-regexp-in-string
+   "\n" "" (format "%s:%s %s" buffer line-number (thing-at-point 'line))))
 
 ;; REVIEW 2023-12-19: rewrite docstring; and maybe argument name
 (cl-defun org-hop-get-entry (&optional (type 'heading))
   "Get data from Org heading at point.
-Default TYPE is heading; otherwise, get line data."
+Default TYPE is \\='heading; otherwise, get data from line at point."
   (let* ((path        (when (eq type 'heading) (org-get-outline-path t t)))
          (file        (buffer-file-name))
          (buffer      (buffer-name))
@@ -291,7 +290,8 @@ Optional argument OTHER-WINDOW switch to other window."
   "Add ENTRY to its recently visited list TYPE.
 If VERBOSE is non-nil, show messages in echo area."
   (let ((entry (org-hop-get-entry type)))
-    (when verbose (message (format "Saved: %s" (car entry))))
+    (when verbose
+      (message "Saved: %s" (car entry)))
     (if (eq type 'heading)
         (org-hop-add entry org-hop-recent-headings-list)
       (org-hop-add entry org-hop-recent-lines-list))))

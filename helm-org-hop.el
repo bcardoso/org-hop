@@ -121,23 +121,21 @@ Argument TYPE indicates if candidate is a \\='heading or \\='line."
   "Insert Org links to candidates in variable `helm-marked-candidates'.
 Argument TYPE indicates if candidate is a \\='heading or \\='line."
   (let ((org-link-file-path-type 'absolute)
-        (num (length (helm-marked-candidates)))
-        (current-buffer (current-buffer)))
+        (num (length (helm-marked-candidates))))
     (save-excursion
       (dolist (entry-data (reverse (helm-marked-candidates)))
-        (let ((entry (org-hop-get-coordinates entry-data)))
+        (let ((entry (org-hop-get-coordinates entry-data))
+              (inhibit-message t))
           (when entry
             (with-current-buffer (plist-get entry :buffer)
               (org-hop-to-char-or-line (plist-get entry :char)
                                        (plist-get entry :line))
-              (let ((inhibit-message t))
-                (if (eq type 'heading)
-                    (call-interactively 'org-store-link)
-                  (helm-org-hop-store-line-link))))))))
+              (if (eq type 'heading)
+                  (call-interactively 'org-store-link)
+                (helm-org-hop-store-line-link)))))))
     (if (> num 1)
         (org-insert-all-links num "- " "\n")
-      (org-insert-all-links 1 "" ""))
-    (switch-to-buffer current-buffer)))
+      (org-insert-all-links 1 "" ""))))
 
 (defun helm-org-hop-store-link (type)
   "Store Org links to candidates in variable `helm-marked-candidates'.
@@ -164,8 +162,7 @@ Argument TYPE indicates if candidate is a \\='heading or \\='line."
          (line-number (line-number-at-pos)))
     (add-to-list 'org-stored-links
                  `(,(format "file:%s::%s" file line-number)
-                   ,(format "%s:%s" filename line-number))
-                 t)
+                   ,(format "%s:%s" filename line-number)))
     (message "Stored link for %s:%s" filename line-number)))
 
 
