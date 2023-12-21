@@ -4,7 +4,7 @@
 
 * org-hop
 
-An interface to hop to Org headings and markers using completing-read.
+An interface to hop to Org headings and lines using completing-read.
 
 Alternatively, =helm-org-hop= provides a richer interface to =org-hop=.
 
@@ -26,10 +26,10 @@ Or, with use-package + straight.el:
                      :files ("org-hop.el"))
   :bind ("C-c h" . org-hop)
   :config
-  ;; optional
+  ;; optional recent visited headings mode
   (org-hop-recent-mode +1))
 
-;; optional helm interface
+;; optional Helm interface
 (use-package helm-org-hop
   :straight (helm-org-hop :host github :repo "bcardoso/org-hop"
                           :files ("helm-org-hop.el"))
@@ -49,11 +49,11 @@ Either way, =org-hop= will build a list with all findable Org headings (see next
 - =org-hop-add-line-to-list=
 - =org-hop-add-heading-or-line=
 
-With the =helm-org-hop= interface, besides hopping, you can store/insert a link to a heading or a line marker, and remove them from the recent list.
+With the =helm-org-hop= interface, besides hopping, you can store/insert a link to a heading or a line, and remove them from the recent list.
 
 The =org-hop-recent-mode= keeps track of the headings you spend some time in (see =org-hop-recent-idle-interval=).
 
-Recent headings and line markers are shown at the top of the general headings list. To remove them, run =M-x org-hop-remove-heading-from-list= or =M-x org-hop-remove-line-from-list=.
+Recent headings and line are shown at the top of the general headings list. To remove them, run =M-x org-hop-remove-heading-from-list= or =M-x org-hop-remove-line-from-list=.
 
 
 ** Customization
@@ -96,15 +96,22 @@ Use the variable =org-hop-files-ignore= to specify a list of Org files that shou
 
 - alphapapa's [[https://github.com/alphapapa/org-recent-headings][org-recent-headings]] provides a more sophisticated approach to decide upon recently used Org headings.
 
-  - By contrast, org-hop uses only three simple criteria to consider a heading as "recent" or "visited": 1) you visited a heading through the (helm-)org-hop interface (much like a history); or 2) you spent some time in a heading (with =org-hop-recent-mode=); or 3) you added a heading to the recent list with =M-x org-hop-add-heading-or-marker=.
+  - By contrast, org-hop uses only three simple criteria to consider a heading as "recent" or "visited": 1) you visited a heading through the (helm-)org-hop interface (much like a history); or 2) you spent some time in a heading (with =org-hop-recent-mode= enabled); or 3) you added a heading to the recent list with =M-x org-hop-add-heading-or-line=.
 
   - [[https://github.com/alphapapa/org-recent-headings#helm][helm-org-recent-headings]] (and/or other helm sources) can be used within the =helm-org-hop= command:
 
     #+begin_src emacs-lisp
     (setq helm-org-hop-default-sources '(helm-org-recent-headings-source
-                                         helm-source-org-hop-headings))
+                                         helm-org-hop-headings-source))
     #+end_src
 
 - minad's [[https://github.com/minad/consult][consult]] package provides the commands =consult-org-heading= and =consult-org-agenda= for narrowing and jumping to Org headings.
 
 
+** Changelog
+
+- v0.3 :: use [[https://github.com/alphapapa/org-ql][org-ql]] to select Org headings.
+
+- v0.2 :: select Org headings with custom cache.
+
+- v0.1 :: initial concept.
