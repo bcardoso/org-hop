@@ -219,14 +219,14 @@ When FORCE is non-nil, force update."
 
 ;;;;; Actions
 
-(defun org-hop-get-coordinates (entry)
+(defun org-hop-get-entry-position (entry)
   "Return ENTRY coordinates."
   (let* ((file   (plist-get (car entry) :file))
          (buffer (or (plist-get (car entry) :buffer)
                      (find-buffer-visiting file)
                      (find-file-noselect file)))
-         (line   (plist-get (car entry) :line))
          (char   (plist-get (car entry) :char))
+         (line   (plist-get (car entry) :line))
          (path   (plist-get (car entry) :path))
          (olp    (when path
                    (with-current-buffer buffer
@@ -244,11 +244,11 @@ When FORCE is non-nil, force update."
 
 (defun org-hop-to-entry (entry &optional other-window)
   "Hop to ENTRY.
-Optional argument OTHER-WINDOW switch to other window."
-  (let* ((coordinates (org-hop-get-coordinates entry))
-         (buffer      (plist-get coordinates :buffer))
-         (line        (plist-get coordinates :line))
-         (char        (plist-get coordinates :char)))
+Optional argument OTHER-WINDOW selects the buffer in other window."
+  (let* ((entry-pos (org-hop-get-entry-position entry))
+         (buffer    (plist-get entry-pos :buffer))
+         (char      (plist-get entry-pos :char))
+         (line      (plist-get entry-pos :line)))
     (if (not (buffer-live-p buffer))
         (org-hop-remove-missing entry)
       (run-hooks 'org-hop-pre-hop-hook)
@@ -270,6 +270,16 @@ Optional argument OTHER-WINDOW switch to other window."
     (org-fold-show-entry)
     (org-fold-show-children))
   (recenter org-hop-recenter))
+
+(defmacro org-hop-with-entry-buffer (entry &rest body)
+  "Execute the forms in BODY with ENTRY location temporarily current."
+  (declare (indent defun))
+  `(let ((entry-pos (org-hop-get-entry-position entry)))
+     (when entry-pos
+       (with-current-buffer (plist-get entry-pos :buffer)
+         (org-hop-to-char-or-line (plist-get entry-pos :char)
+                                  (plist-get entry-pos :line))
+         ,@body))))
 
 
 ;;;; Add entries to recently visited lists
@@ -326,23 +336,23 @@ If VERBOSE is non-nil, show messages in echo area."
 
 ;;;; Remove entries from recent lists
 
-(defmacro org-hop-remove (entry-data recent-list &optional verbose)
-  "Remove an ENTRY-DATA from RECENT-LIST.
+(defmacro org-hop-remove (entry recent-list &optional verbose)
+  "Remove an ENTRY from RECENT-LIST.
 If VERBOSE is non-nil, show messages in echo area."
-  `(let ((entry (rassoc ,entry-data ,recent-list)))
-     (setq ,recent-list (remove entry ,recent-list))
+  `(let ((item (rassoc ,entry ,recent-list)))
+     (setq ,recent-list (remove item ,recent-list))
      (when (or ,verbose (called-interactively-p 'any))
-       (message (format "Removed from recent list: %s" (car entry))))))
+       (message "Removed from recent list: %s" (car item)))))
 
-(defun org-hop-remove-heading (entry-data &optional verbose)
-  "Remove ENTRY-DATA from recent headings list.
+(defun org-hop-remove-heading (entry &optional verbose)
+  "Remove ENTRY from recent headings list.
 If VERBOSE is non-nil, show messages in echo area."
-  (org-hop-remove entry-data org-hop-recent-headings-list verbose))
+  (org-hop-remove entry org-hop-recent-headings-list verbose))
 
-(defun org-hop-remove-line (entry-data &optional verbose)
-  "Remove ENTRY-DATA from recent lines list.
+(defun org-hop-remove-line (entry &optional verbose)
+  "Remove ENTRY from recent lines list.
 If VERBOSE is non-nil, show messages in echo area."
-  (org-hop-remove entry-data org-hop-recent-lines-list verbose))
+  (org-hop-remove entry org-hop-recent-lines-list verbose))
 
 (defun org-hop-remove-missing (entry)
   "Remove ENTRY when missing buffer or marker."
