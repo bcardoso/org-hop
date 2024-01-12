@@ -164,7 +164,7 @@ This function is controlled by the variable `org-hop-files'."
 Default TYPE is \\='heading; otherwise, get data from line at point."
   (let* ((path        (when (eq type 'heading) (org-get-outline-path t t)))
          (file        (buffer-file-name))
-         (buffer      (buffer-name))
+         (buffer      (current-buffer))
          (line-number (line-number-at-pos))
          (char        (point))
          (title       (if (eq type 'heading)
