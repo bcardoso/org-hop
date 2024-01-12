@@ -239,34 +239,28 @@ Argument TYPE indicates if candidate is a \\='heading or \\='line."
   "Run interactively `helm-org-hop-remove-line'."
   'helm-org-hop-remove-line)
 
-(defvar helm-org-hop-headings-map
-  (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map helm-map)
-    (define-key map (kbd "C-c o")   'helm-org-hop-run-entry-other-window)
-    (define-key map (kbd "C-c l")   'helm-org-hop-run-store-link-heading)
-    (define-key map (kbd "C-c C-l") 'helm-org-hop-run-insert-link-heading)
-    map)
-  "Keymap for `helm-org-hop-headings-source'.")
+(defvar-keymap helm-org-hop-headings-map
+  :doc "Keymap for `helm-org-hop-headings-source'."
+  :parent helm-map
+  "C-c o"   #'helm-org-hop-run-entry-other-window
+  "C-c l"   #'helm-org-hop-run-store-link-heading
+  "C-c C-l" #'helm-org-hop-run-insert-link-heading)
 
-(defvar helm-org-hop-recent-headings-map
-  (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map helm-map)
-    (define-key map (kbd "C-c o")   'helm-org-hop-run-entry-other-window)
-    (define-key map (kbd "C-c l")   'helm-org-hop-run-store-link-heading)
-    (define-key map (kbd "C-c C-l") 'helm-org-hop-run-insert-link-heading)
-    (define-key map (kbd "M-D")     'helm-org-hop-run-remove-heading)
-    map)
-  "Keymap for `helm-org-hop-recent-headings-source'.")
+(defvar-keymap helm-org-hop-recent-headings-map
+  :doc "Keymap for `helm-org-hop-recent-headings-source'."
+  :parent helm-map
+  "C-c o"   #'helm-org-hop-run-entry-other-window
+  "C-c l"   #'helm-org-hop-run-store-link-heading
+  "C-c C-l" #'helm-org-hop-run-insert-link-heading
+  "M-D"     #'helm-org-hop-run-remove-heading)
 
-(defvar helm-org-hop-recent-lines-map
-  (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map helm-map)
-    (define-key map (kbd "C-c o")   'helm-org-hop-run-entry-other-window)
-    (define-key map (kbd "C-c l")   'helm-org-hop-run-store-link-line)
-    (define-key map (kbd "C-c C-l") 'helm-org-hop-run-insert-link-line)
-    (define-key map (kbd "M-D")     'helm-org-hop-run-remove-line)
-    map)
-  "Keymap for `helm-org-hop-recent-lines-source'.")
+(defvar-keymap helm-org-hop-recent-lines-map
+  :doc "Keymap for `helm-org-hop-recent-lines-source'."
+  :parent helm-map
+  "C-c o"   #'helm-org-hop-run-entry-other-window
+  "C-c l"   #'helm-org-hop-run-store-link-line
+  "C-c C-l" #'helm-org-hop-run-insert-link-line
+  "M-D"     #'helm-org-hop-run-remove-line)
 
 
 ;;;; Sources
