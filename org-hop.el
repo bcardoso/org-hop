@@ -180,7 +180,7 @@ Default TYPE is \\='heading; otherwise, get data from line at point."
 ;;;; Scan Org files
 
 (defvar org-hop-headings-list nil
-  "List of Org headings recently visited.")
+  "List of all known Org headings.")
 
 (cl-defun org-hop-headings (&key (buffers-files (org-hop-files))
                                  (pred 'heading) (narrow t) pattern sort)
