@@ -270,8 +270,7 @@ Argument TYPE indicates if candidate is a \\='heading or \\='line."
 PRED is a `org-ql-predicates' predicate, defaults to \\='heading.
 MIN is the mininum length of the input pattern.
 SORT is a list of defined `org-ql' sorting methods."
-  (let ((smart (or (eq pred 'rifle) (eq pred 'smart)))
-        (helm-input-idle-delay helm-org-ql-input-idle-delay)) ;; review
+  (let ((smart (or (eq pred 'rifle) (eq pred 'smart))))
     (helm-make-source
         (if smart "Org headings & contents" "Org headings")
         'helm-source-sync
