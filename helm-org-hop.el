@@ -336,10 +336,10 @@ CANDIDATES is the list of candidates."
 
 ;;;###autoload
 (defun helm-org-hop (&optional arg)
-  "Helm for Org headings.
-With optional argument ARG, reset all lists."
+  "Helm for `org-hop'.
+With optional argument ARG, run `org-hop-reset', which see."
   (interactive "P")
-  (when arg (org-hop-reset-lists))
+  (org-hop-reset arg)
   (helm :buffer "*helm-org-hop*"
         :ff-transformer-show-only-basename nil
         :sources helm-org-hop-default-sources))

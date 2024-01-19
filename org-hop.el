@@ -207,11 +207,9 @@ NARROW and SORT are arguments for `org-ql-select', which see."
     (when (/= sum last-sum)
       (set-register 'org-hop-buffers-tick-sum sum))))
 
-(defun org-hop-headings-list-update (&optional force)
-  "Update `org-hop-headings-list' if necessary.
-When FORCE is non-nil, force update."
-  (when (or force
-            (not org-hop-headings-list)
+(defun org-hop-headings-list-update ()
+  "Update `org-hop-headings-list' if necessary."
+  (when (or (not org-hop-headings-list)
             (org-hop-buffers-modified-tick-p))
     (setq org-hop-headings-list (org-hop-headings))))
 
@@ -284,7 +282,7 @@ Optional argument OTHER-WINDOW selects the buffer in other window."
 ;;;; Add entries to recently visited lists
 
 (defvar org-hop-recent-headings-list nil
-  "List of Org headings recently visited.")
+  "List of recently visited Org headings.")
 
 (defvar org-hop-recent-lines-list nil
   "List of saved buffer lines.")
@@ -394,18 +392,32 @@ With optional argument ARG, set list to nil."
   (setq org-hop-recent-headings-list nil
         org-hop-recent-lines-list    nil))
 
-(defun org-hop-reset-lists ()
-  "Reset all lists."
+(defun org-hop-reset-caches ()
+  "Reset Org caches and rebuild `org-hop-headings-list'."
   (interactive)
+  (message "[org-hop] Resetting caches...")
+  (setq org-ql-cache (make-hash-table :weakness 'key))
+  (org-element-cache-reset 'all)
   (org-hop-reset-recent-lists)
-  (org-hop-headings-list-update :force))
+  (setq org-hop-headings-list nil)
+  (org-hop-headings-list-update)
+  (org-persist-gc)
+  (message "[org-hop] Resetting caches... done"))
+
+(defun org-hop-reset (&optional arg)
+  "Reset Org-Hop lists.
+With a prefix argument ARG, run `org-hop-reset-recent-lists'.
+With a double prefix argument, run `org-hop-reset-caches'."
+  (interactive "P")
+  (cond ((eq (prefix-numeric-value arg) 4) (org-hop-reset-recent-lists))
+        ((eq (prefix-numeric-value arg) 16) (org-hop-reset-caches))))
 
 ;;;###autoload
 (defun org-hop (&optional arg)
   "Hop to a Org heading.
-With optional argument ARG, force reset and update all lists."
+With optional argument ARG, run `org-hop-reset', which see."
   (interactive "P")
-  (when arg (org-hop-reset-lists))
+  (org-hop-reset arg)
   (let* ((org-headings (append org-hop-recent-headings-list
                                org-hop-recent-lines-list
                                org-hop-headings-list))
