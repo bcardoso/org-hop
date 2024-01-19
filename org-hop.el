@@ -204,9 +204,9 @@ NARROW and SORT are arguments for `org-ql-select', which see."
   (let ((sum (seq-reduce #'+ (mapcar #'buffer-modified-tick
                                      (org-buffer-list 'files t))
                          0))
-        (last-sum (or (get-register 'org-buffers-tick-sum) 0)))
+        (last-sum (or (get-register 'org-hop-buffers-tick-sum) 0)))
     (when (/= sum last-sum)
-      (set-register 'org-buffers-tick-sum sum))))
+      (set-register 'org-hop-buffers-tick-sum sum))))
 
 (defun org-hop-headings-list-update (&optional force)
   "Update `org-hop-headings-list' if necessary.
