@@ -144,20 +144,19 @@ This function is controlled by the variable `org-hop-files'."
 (defun org-hop-format-heading (buffer path)
   "Format heading title info from BUFFER and Org heading PATH."
   (font-lock-ensure (pos-bol) (pos-eol))
-  (let ((keyword (when org-hop-headings-show-todo-prefix
-                   (org-get-todo-state)))
+  (let ((todo (when org-hop-headings-show-todo-prefix (org-get-todo-state)))
         (heading (org-format-outline-path path org-hop-headings-width))
-        (tags    (when org-hop-headings-show-tags (org-get-tags))))
+        (tags (when org-hop-headings-show-tags (org-get-tags))))
     (concat (when org-hop-headings-show-filename (format "%s:/" buffer))
-            (when keyword (format "%s " keyword))
+            (when todo (format "%s " todo))
             heading
             (when tags (propertize (format " %s" (org-make-tag-string tags))
                                    'face 'org-tag)))))
 
 (defun org-hop-format-line (buffer line-number)
   "Format line title info for BUFFER and LINE-NUMBER."
-  (replace-regexp-in-string
-   "\n" "" (format "%s:%s %s" buffer line-number (thing-at-point 'line))))
+  (string-remove-suffix
+   "\n" (format "%s:%s %s" buffer line-number (thing-at-point 'line))))
 
 (cl-defun org-hop-get-entry (&optional (type 'heading))
   "Get data from Org heading at point.
