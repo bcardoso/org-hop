@@ -147,8 +147,8 @@ This function is controlled by the variable `org-hop-files'."
   (let ((todo (when org-hop-headings-show-todo-prefix (org-get-todo-state)))
         (heading (org-format-outline-path path org-hop-headings-width))
         (tags (when org-hop-headings-show-tags (org-get-tags))))
-    (concat (when org-hop-headings-show-filename (format "%s:/" buffer))
-            (when todo (format "%s " todo))
+    (concat (when todo (format "#%s " todo))
+            (when org-hop-headings-show-filename (format "%s:/" buffer))
             heading
             (when tags (propertize (format " %s" (org-make-tag-string tags))
                                    'face 'org-tag)))))
