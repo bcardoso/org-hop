@@ -273,10 +273,11 @@ Optional argument OTHER-WINDOW selects the buffer in other window."
   (declare (indent defun))
   `(let ((entry-pos (org-hop-get-entry-position entry)))
      (when entry-pos
-       (with-current-buffer (plist-get entry-pos :buffer)
-         (org-hop-to-char-or-line (plist-get entry-pos :char)
-                                  (plist-get entry-pos :line))
-         ,@body))))
+       (save-excursion
+         (with-current-buffer (plist-get entry-pos :buffer)
+           (org-hop-to-char-or-line (plist-get entry-pos :char)
+                                    (plist-get entry-pos :line))
+           ,@body)))))
 
 
 ;;;; Add entries to recently visited lists
