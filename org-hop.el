@@ -219,7 +219,8 @@ NARROW and SORT are arguments for `org-ql-select', which see."
 (defun org-hop-get-entry-position (entry)
   "Return ENTRY coordinates."
   (let* ((file   (plist-get (car entry) :file))
-         (buffer (or (plist-get (car entry) :buffer)
+         (buf    (plist-get (car entry) :buffer))
+         (buffer (or (and (buffer-live-p buf) buf)
                      (find-buffer-visiting file)
                      (find-file-noselect file)))
          (char   (plist-get (car entry) :char))
