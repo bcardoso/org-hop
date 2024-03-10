@@ -144,14 +144,14 @@ This function is controlled by the variable `org-hop-files'."
 (defun org-hop-format-heading (buffer path)
   "Format heading title info from BUFFER and Org heading PATH."
   (font-lock-ensure (pos-bol) (pos-eol))
-  (let ((todo (when org-hop-headings-show-todo-prefix (org-get-todo-state)))
+  (let ((todo (and org-hop-headings-show-todo-prefix (org-get-todo-state)))
         (heading (org-format-outline-path path org-hop-headings-width))
-        (tags (when org-hop-headings-show-tags (org-get-tags))))
-    (concat (when todo (format "#%s " todo))
-            (when org-hop-headings-show-filename (format "%s:/" buffer))
+        (tags (and org-hop-headings-show-tags (org-get-tags))))
+    (concat (and todo (format "#%s " todo))
+            (and org-hop-headings-show-filename (format "%s:/" buffer))
             heading
-            (when tags (propertize (format " %s" (org-make-tag-string tags))
-                                   'face 'org-tag)))))
+            (and tags (propertize (format " %s" (org-make-tag-string tags))
+                                  'face 'org-tag)))))
 
 (defun org-hop-format-line (buffer line-number)
   "Format line title info for BUFFER and LINE-NUMBER."
@@ -169,11 +169,11 @@ Default TYPE is \\='heading; otherwise, get data from line at point."
          (title       (if (eq type 'heading)
                           (org-hop-format-heading buffer path)
                         (org-hop-format-line buffer line-number))))
-    `(,title (:path   ,path
-              :file   ,file
-              :buffer ,buffer
-              :line   ,line-number
-              :char   ,char))))
+    `(,title ( :path   ,path
+               :file   ,file
+               :buffer ,buffer
+               :line   ,line-number
+               :char   ,char))))
 
 
 ;;;; Scan Org files
@@ -226,12 +226,12 @@ NARROW and SORT are arguments for `org-ql-select', which see."
          (char   (plist-get (car entry) :char))
          (line   (plist-get (car entry) :line))
          (path   (plist-get (car entry) :path))
-         (olp    (when path
-                   (with-current-buffer buffer
-                     (ignore-errors (org-find-olp path t))))))
-    `(:buffer ,(or (when olp (marker-buffer olp)) buffer)
-      :char   ,(or (when olp (marker-position olp)) char)
-      :line   ,line)))
+         (olp    (and path
+                      (with-current-buffer buffer
+                        (ignore-errors (org-find-olp path t))))))
+    `( :buffer ,(or (and olp (marker-buffer olp)) buffer)
+       :char   ,(or (and olp (marker-position olp)) char)
+       :line   ,line)))
 
 (defun org-hop-to-char-or-line (char line)
   "Go to CHAR if it is non-nil.  Else, go to LINE."
