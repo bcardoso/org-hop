@@ -143,7 +143,10 @@ This function is controlled by the variable `org-hop-files'."
 
 (defun org-hop-format-heading (buffer path)
   "Format heading title info from BUFFER and Org heading PATH."
-  (font-lock-ensure (pos-bol) (pos-eol))
+  ;; FIXME 2024-03-13: font-lock-ensure is too slow in the first run.
+  ;; the font-lock call ensures that 'todo' tags are properly formatted.
+  ;; Is there a more efficient way to do this?
+  ;; (font-lock-ensure (pos-bol) (pos-eol))
   (let ((todo (and org-hop-headings-show-todo-prefix (org-get-todo-state)))
         (heading (org-format-outline-path path org-hop-headings-width))
         (tags (and org-hop-headings-show-tags (org-get-tags))))
