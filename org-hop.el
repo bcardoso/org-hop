@@ -268,11 +268,8 @@ Optional argument OTHER-WINDOW selects the buffer in other window."
   "Proper focus selected entry."
   (when (and (eq major-mode 'org-mode) (org-at-heading-p))
     (goto-char (pos-bol))
-    ;; NOTE 2024-03-04: try `org-fold-show-subtree'
-    ;; (org-fold-show-entry)
-    ;; (org-fold-show-children)
-    (org-fold-show-subtree)
-    )
+    (org-fold-show-entry)
+    (org-fold-show-children))
   (recenter org-hop-recenter))
 
 (defmacro org-hop-with-entry-buffer (entry &rest body)
