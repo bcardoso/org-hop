@@ -89,7 +89,7 @@ See `org-hop-recent-mode'."
   :type 'integer)
 
 (defcustom org-hop-push-to-mark-ring t
-  "If non-nil, push current position into the mark ring before to hop."
+  "If non-nil, push current position into the mark ring before hop."
   :group 'org-hop
   :type 'boolean)
 
