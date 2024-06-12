@@ -164,7 +164,7 @@ This function is controlled by the variable `org-hop-files'."
 (cl-defun org-hop-get-entry (&optional (type 'heading))
   "Get data from Org heading at point.
 Default TYPE is \\='heading; otherwise, get data from line at point."
-  (let* ((path        (when (eq type 'heading) (org-get-outline-path t t)))
+  (let* ((path        (and (eq type 'heading) (org-get-outline-path t t)))
          (file        (buffer-file-name))
          (buffer      (current-buffer))
          (line-number (line-number-at-pos))
@@ -424,12 +424,23 @@ With a double prefix argument, run `org-hop-reset-caches'."
 With optional argument ARG, run `org-hop-reset', which see."
   (interactive "P")
   (org-hop-reset arg)
-  (let* ((org-headings (append org-hop-recent-headings-list
-                               org-hop-recent-lines-list
-                               org-hop-headings-list))
-         (item (completing-read "Hop to: " org-headings))
-         (entry (cdr (assoc item org-headings))))
+  (let* ((headings (append org-hop-recent-headings-list
+                           org-hop-recent-lines-list
+                           org-hop-headings-list))
+         (item (completing-read "Hop to: " headings))
+         (entry (cdr (assoc item headings))))
     (org-hop-to-entry entry)))
+
+;;;###autoload
+(defun org-hop-current-buffer ()
+  "Hop to a Org heading in current buffer."
+  (interactive)
+  (if (derived-mode 'org-mode)
+      (let* ((headings (org-hop-headings :buffers-files (current-buffer)))
+             (item (completing-read "Hop to: " headings))
+             (entry (cdr (assoc item headings))))
+        (org-hop-to-entry entry))
+    (message "Not an Org file.")))
 
 ;;;###autoload
 (defun org-hop-add-heading-or-line (&optional arg)
