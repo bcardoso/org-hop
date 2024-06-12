@@ -415,7 +415,8 @@ With a prefix argument ARG, run `org-hop-reset-recent-lists'.
 With a double prefix argument, run `org-hop-reset-caches'."
   (interactive "P")
   (cond ((eq (prefix-numeric-value arg) 4) (org-hop-reset-recent-lists))
-        ((eq (prefix-numeric-value arg) 16) (org-hop-reset-caches))))
+        ((eq (prefix-numeric-value arg) 16) (org-hop-reset-caches))
+        (t (org-hop-headings-list-update))))
 
 ;;;###autoload
 (defun org-hop (&optional arg)
