@@ -435,7 +435,7 @@ With optional argument ARG, run `org-hop-reset', which see."
 (defun org-hop-current-buffer ()
   "Hop to a Org heading in current buffer."
   (interactive)
-  (if (derived-mode 'org-mode)
+  (if (derived-mode-p 'org-mode)
       (let* ((headings (org-hop-headings :buffers-files (current-buffer)))
              (item (completing-read "Hop to: " headings))
              (entry (cdr (assoc item headings))))
