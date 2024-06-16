@@ -167,7 +167,6 @@ Default TYPE is \\='heading; otherwise, get data from line at point."
                                              (org-get-outline-path t t))
                    (org-hop-format-line (marker-buffer marker)
                                         (line-number-at-pos)))))
-    (put-text-property 0 1 'hop marker title)
     (if (eq type 'heading)
         (put-text-property 0 1 'org-marker marker title)
       (put-text-property 0 1 'consult-location
@@ -215,12 +214,17 @@ NARROW and SORT are arguments for `org-ql-select', which see."
 
 ;;;;; Actions
 
+(defun org-hop--entry-marker (entry)
+  "Return ENTRY marker."
+  (or (get-text-property 0 'org-marker entry)
+      (car (get-text-property 0 'consult-location entry))))
+
 (defun org-hop-to-entry (entry &optional other-window)
   "Hop to ENTRY.
 Optional argument OTHER-WINDOW selects the buffer in other window."
-  (let* ((hop (get-text-property 0 'hop entry))
-         (buffer (marker-buffer hop))
-         (pos   (marker-position hop)))
+  (let* ((marker (org-hop--entry-marker entry))
+         (buffer (marker-buffer marker))
+         (pos   (marker-position marker)))
     (if (not (buffer-live-p buffer))
         (org-hop-remove-missing entry)
       (run-hooks 'org-hop-pre-hop-hook)
@@ -237,7 +241,7 @@ Optional argument OTHER-WINDOW selects the buffer in other window."
 
 (defun org-hop-focus-entry ()
   "Proper focus selected entry."
-  (when (and (eq major-mode 'org-mode) (org-at-heading-p))
+  (when (and (derived-mode-p 'org-mode) (org-at-heading-p))
     (goto-char (pos-bol))
     (org-fold-show-entry)
     (org-fold-show-children))
@@ -246,12 +250,11 @@ Optional argument OTHER-WINDOW selects the buffer in other window."
 (defmacro org-hop-with-entry-buffer (entry &rest body)
   "Execute the forms in BODY with ENTRY location temporarily current."
   (declare (indent defun))
-  `(when ,entry
-     (let ((hop (get-text-property 0 'hop entry)))
-       (save-excursion
-         (with-current-buffer (marker-buffer hop)
-           (goto-char (marker-position hop))
-           ,@body)))))
+  `(when-let ((marker (org-hop--entry-marker entry)))
+     (save-excursion
+       (with-current-buffer (marker-buffer marker)
+         (goto-char (marker-position marker))
+         ,@body))))
 
 
 ;;;; Add entries to recently visited lists
