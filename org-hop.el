@@ -167,11 +167,12 @@ Default TYPE is \\='heading; otherwise, get data from line at point."
                                              (org-get-outline-path t t))
                    (org-hop-format-line (marker-buffer marker)
                                         (line-number-at-pos)))))
+    (put-text-property 0 1 'hop marker title)
     (if (eq type 'heading)
         (put-text-property 0 1 'org-marker marker title)
       (put-text-property 0 1 'consult-location
                          (cons marker (line-number-at-pos)) title))
-    `(,title ,marker)))
+    title))
 
 
 ;;;; Scan Org files
@@ -217,8 +218,9 @@ NARROW and SORT are arguments for `org-ql-select', which see."
 (defun org-hop-to-entry (entry &optional other-window)
   "Hop to ENTRY.
 Optional argument OTHER-WINDOW selects the buffer in other window."
-  (let* ((buffer (marker-buffer (car entry)))
-         (pos   (marker-position (car entry))))
+  (let* ((hop (get-text-property 0 'hop entry))
+         (buffer (marker-buffer hop))
+         (pos   (marker-position hop)))
     (if (not (buffer-live-p buffer))
         (org-hop-remove-missing entry)
       (run-hooks 'org-hop-pre-hop-hook)
@@ -245,10 +247,11 @@ Optional argument OTHER-WINDOW selects the buffer in other window."
   "Execute the forms in BODY with ENTRY location temporarily current."
   (declare (indent defun))
   `(when ,entry
-     (save-excursion
-       (with-current-buffer (marker-buffer (car ,entry))
-         (goto-char (marker-position (car ,entry)))
-         ,@body))))
+     (let ((hop (get-text-property 0 'hop entry)))
+       (save-excursion
+         (with-current-buffer (marker-buffer hop)
+           (goto-char (marker-position hop))
+           ,@body)))))
 
 
 ;;;; Add entries to recently visited lists
@@ -263,14 +266,14 @@ Optional argument OTHER-WINDOW selects the buffer in other window."
   "Put ENTRY in the beginning of RECENT-LIST and remove dups."
   `(setq ,recent-list (cl-remove-duplicates
                        (cons ,entry (delete ,entry ,recent-list))
-                       :test #'equal :key #'car :from-end t)))
+                       :test #'equal :from-end t)))
 
 (defun org-hop-add-entry (type verbose)
   "Add ENTRY to its recently visited list TYPE.
 If VERBOSE is non-nil, show messages in echo area."
   (let ((entry (org-hop-get-entry type)))
     (when verbose
-      (message "Saved: %s" (car entry)))
+      (message "Saved: %s" entry))
     (if (eq type 'heading)
         (org-hop-add entry org-hop-recent-headings-list)
       (org-hop-add entry org-hop-recent-lines-list))))
@@ -280,14 +283,10 @@ If VERBOSE is non-nil, show messages in echo area."
 If VERBOSE is non-nil, show messages in echo area."
   (interactive)
   (save-excursion
-    (when (and (eq major-mode 'org-mode)
-               (buffer-file-name) ; NOTE: ignores indirect/capture buffers
-               (or (org-at-heading-p)
-                   (and (re-search-backward org-heading-regexp nil t)
-                        (org-at-heading-p))))
-      ;; NOTE: make sure we get the right heading
-      (goto-char (pos-eol))
-      (org-hop-add-entry 'heading verbose))))
+    (and (derived-mode-p 'org-mode)
+         (buffer-file-name) ;; NOTE: ignore indirect/capture buffers
+         (org-back-to-heading t)
+         (org-hop-add-entry 'heading verbose))))
 
 (defun org-hop-add-line-to-list (&optional verbose)
   "Add current line to recent list.
@@ -308,10 +307,10 @@ If VERBOSE is non-nil, show messages in echo area."
 (defmacro org-hop-remove (entry recent-list &optional verbose)
   "Remove an ENTRY from RECENT-LIST.
 If VERBOSE is non-nil, show messages in echo area."
-  `(let ((item (rassoc ,entry ,recent-list)))
-     (setq ,recent-list (remove item ,recent-list))
+  `(prog1
+       (setq ,recent-list (remove entry ,recent-list))
      (when (or ,verbose (called-interactively-p 'any))
-       (message "Removed from recent list: %s" (car item)))))
+       (message "Removed from recent list: %s" ,entry))))
 
 (defun org-hop-remove-heading (entry &optional verbose)
   "Remove ENTRY from recent headings list.
@@ -372,6 +371,7 @@ With optional argument ARG, set list to nil."
   (org-hop-reset-recent-lists)
   (setq org-hop-headings-list nil)
   (org-hop-headings-list-update)
+  (org-persist-gc)
   (message "[org-hop] Resetting caches... done"))
 
 (defun org-hop-reset (&optional arg)
@@ -392,8 +392,7 @@ With optional argument ARG, run `org-hop-reset', which see."
   (let* ((headings (append org-hop-recent-headings-list
                            org-hop-recent-lines-list
                            org-hop-headings-list))
-         (item (completing-read "Hop to: " headings))
-         (entry (cdr (assoc item headings))))
+         (entry (completing-read "Hop to: " headings)))
     (org-hop-to-entry entry)))
 
 ;;;###autoload
@@ -402,10 +401,9 @@ With optional argument ARG, run `org-hop-reset', which see."
   (interactive)
   (if (derived-mode-p 'org-mode)
       (let* ((headings (org-hop-headings :buffers-files (current-buffer)))
-             (item (completing-read "Hop to: " headings))
-             (entry (cdr (assoc item headings))))
+             (entry (completing-read "Hop to: " headings)))
         (org-hop-to-entry entry))
-    (message "Not an Org file.")))
+    (user-error "Not an Org file")))
 
 ;;;###autoload
 (defun org-hop-add-heading-or-line (&optional arg)

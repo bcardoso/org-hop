@@ -28,6 +28,7 @@
 
 ;;; Code:
 
+(require 'org-hop)
 (require 'consult)
 
 (defvar consult-org-hop--headings-source
