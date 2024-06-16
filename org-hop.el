@@ -244,11 +244,11 @@ Optional argument OTHER-WINDOW selects the buffer in other window."
 (defmacro org-hop-with-entry-buffer (entry &rest body)
   "Execute the forms in BODY with ENTRY location temporarily current."
   (declare (indent defun))
-  (when entry
-    (save-excursion
-      (with-current-buffer (marker-buffer (car entry))
-        (goto-char (marker-position (car entry)))
-        ,@body))))
+  `(when ,entry
+     (save-excursion
+       (with-current-buffer (marker-buffer (car ,entry))
+         (goto-char (marker-position (car ,entry)))
+         ,@body))))
 
 
 ;;;; Add entries to recently visited lists
