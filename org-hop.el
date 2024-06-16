@@ -143,18 +143,15 @@ This function is controlled by the variable `org-hop-files'."
 
 (defun org-hop-format-heading (buffer path)
   "Format heading title info from BUFFER and Org heading PATH."
-  ;; FIXME 2024-03-13: font-lock-ensure is too slow in the first run.
-  ;; the font-lock call ensures that 'todo' tags are properly formatted.
-  ;; Is there a more efficient way to do this?
-  ;; (font-lock-ensure (pos-bol) (pos-eol))
   (let ((todo (and org-hop-headings-show-todo-prefix (org-get-todo-state)))
         (heading (org-format-outline-path path org-hop-headings-width))
         (tags (and org-hop-headings-show-tags (org-get-tags))))
-    (concat (and todo (format "#%s " todo))
-            (and org-hop-headings-show-filename (format "%s:/" buffer))
-            heading
-            (and tags (propertize (format " %s" (org-make-tag-string tags))
-                                  'face 'org-tag)))))
+    (concat
+     (and todo (format "#%s " todo))
+     (and org-hop-headings-show-filename (format "%s:/" buffer))
+     heading
+     (and tags (propertize (format " %s" (org-make-tag-string tags))
+                           'face 'org-tag)))))
 
 (defun org-hop-format-line (buffer line-number)
   "Format line title info for BUFFER and LINE-NUMBER."
@@ -164,19 +161,17 @@ This function is controlled by the variable `org-hop-files'."
 (cl-defun org-hop-get-entry (&optional (type 'heading))
   "Get data from Org heading at point.
 Default TYPE is \\='heading; otherwise, get data from line at point."
-  (let* ((path        (and (eq type 'heading) (org-get-outline-path t t)))
-         (file        (buffer-file-name))
-         (buffer      (current-buffer))
-         (line-number (line-number-at-pos))
-         (char        (point))
-         (title       (if (eq type 'heading)
-                          (org-hop-format-heading buffer path)
-                        (org-hop-format-line buffer line-number))))
-    `(,title ( :path   ,path
-               :file   ,file
-               :buffer ,buffer
-               :line   ,line-number
-               :char   ,char))))
+  (let* ((marker (point-marker))
+         (title  (if (eq type 'heading)
+                     (org-hop-format-heading (marker-buffer marker)
+                                             (org-get-outline-path t t))
+                   (org-hop-format-line (marker-buffer marker)
+                                        (line-number-at-pos)))))
+    (if (eq type 'heading)
+        (put-text-property 0 1 'org-marker marker title)
+      (put-text-property 0 1 'consult-location
+                         (cons marker (line-number-at-pos)) title))
+    `(,title ,marker)))
 
 
 ;;;; Scan Org files
@@ -219,44 +214,18 @@ NARROW and SORT are arguments for `org-ql-select', which see."
 
 ;;;;; Actions
 
-(defun org-hop-get-entry-position (entry)
-  "Return ENTRY coordinates."
-  (let* ((file   (plist-get (car entry) :file))
-         (buf    (plist-get (car entry) :buffer))
-         (buffer (or (and (buffer-live-p buf) buf)
-                     (find-buffer-visiting file)
-                     (find-file-noselect file)))
-         (char   (plist-get (car entry) :char))
-         (line   (plist-get (car entry) :line))
-         (path   (plist-get (car entry) :path))
-         (olp    (and path
-                      (with-current-buffer buffer
-                        (ignore-errors (org-find-olp path t))))))
-    `( :buffer ,(or (and olp (marker-buffer olp)) buffer)
-       :char   ,(or (and olp (marker-position olp)) char)
-       :line   ,line)))
-
-(defun org-hop-to-char-or-line (char line)
-  "Go to CHAR if it is non-nil.  Else, go to LINE."
-  (if char
-      (goto-char char)
-    (goto-char (point-min))
-    (forward-line (1- line))))
-
 (defun org-hop-to-entry (entry &optional other-window)
   "Hop to ENTRY.
 Optional argument OTHER-WINDOW selects the buffer in other window."
-  (let* ((entry-pos (org-hop-get-entry-position entry))
-         (buffer    (plist-get entry-pos :buffer))
-         (char      (plist-get entry-pos :char))
-         (line      (plist-get entry-pos :line)))
+  (let* ((buffer (marker-buffer (car entry)))
+         (pos   (marker-position (car entry))))
     (if (not (buffer-live-p buffer))
         (org-hop-remove-missing entry)
       (run-hooks 'org-hop-pre-hop-hook)
       (if (or org-hop-to-entry-other-window other-window)
           (switch-to-buffer-other-window buffer)
         (switch-to-buffer buffer))
-      (org-hop-to-char-or-line char line)
+      (goto-char pos)
       (run-hooks 'org-hop-post-hop-hook))))
 
 (defun org-hop-mark-ring-push ()
@@ -275,13 +244,11 @@ Optional argument OTHER-WINDOW selects the buffer in other window."
 (defmacro org-hop-with-entry-buffer (entry &rest body)
   "Execute the forms in BODY with ENTRY location temporarily current."
   (declare (indent defun))
-  `(let ((entry-pos (org-hop-get-entry-position entry)))
-     (when entry-pos
-       (save-excursion
-         (with-current-buffer (plist-get entry-pos :buffer)
-           (org-hop-to-char-or-line (plist-get entry-pos :char)
-                                    (plist-get entry-pos :line))
-           ,@body)))))
+  (when entry
+    (save-excursion
+      (with-current-buffer (marker-buffer (car entry))
+        (goto-char (marker-position (car entry)))
+        ,@body))))
 
 
 ;;;; Add entries to recently visited lists
@@ -402,11 +369,9 @@ With optional argument ARG, set list to nil."
   (interactive)
   (message "[org-hop] Resetting caches...")
   (setq org-ql-cache (make-hash-table :weakness 'key))
-  (org-element-cache-reset 'all)
   (org-hop-reset-recent-lists)
   (setq org-hop-headings-list nil)
   (org-hop-headings-list-update)
-  (org-persist-gc)
   (message "[org-hop] Resetting caches... done"))
 
 (defun org-hop-reset (&optional arg)
