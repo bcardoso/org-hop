@@ -64,8 +64,11 @@
   "Consult source for saved lines.")
 
 ;;;###autoload
-(defun consult-org-hop ()
-  (interactive)
+(defun consult-org-hop (&optional arg)
+  "Hop to a Org heading with `consult'.
+With optional argument ARG, run `org-hop-reset', which see."
+  (interactive "P")
+  (org-hop-reset arg)
   (consult--multi
    (list consult-org-hop--recent-headings-source
          consult-org-hop--recent-lines-source

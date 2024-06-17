@@ -156,7 +156,8 @@ This function is controlled by the variable `org-hop-files'."
 (defun org-hop-format-line (buffer line-number)
   "Format line title info for BUFFER and LINE-NUMBER."
   (string-remove-suffix
-   "\n" (format "%s:%s %s" buffer line-number (thing-at-point 'line))))
+   "\n" (format "%s:%s   %s"
+                buffer line-number (string-trim (thing-at-point 'line)))))
 
 (cl-defun org-hop-get-entry (&optional (type 'heading))
   "Get data from Org heading at point.
@@ -310,10 +311,10 @@ If VERBOSE is non-nil, show messages in echo area."
 (defmacro org-hop-remove (entry recent-list &optional verbose)
   "Remove an ENTRY from RECENT-LIST.
 If VERBOSE is non-nil, show messages in echo area."
-  `(prog1
-       (setq ,recent-list (remove entry ,recent-list))
+  `(progn
+     (setq ,recent-list (remove entry ,recent-list))
      (when (or ,verbose (called-interactively-p 'any))
-       (message "Removed from recent list: %s" ,entry))))
+       (message "Removed from recent list: %s" entry))))
 
 (defun org-hop-remove-heading (entry &optional verbose)
   "Remove ENTRY from recent headings list.
