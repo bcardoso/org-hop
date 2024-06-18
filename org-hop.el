@@ -152,9 +152,13 @@ This function is controlled by the variable `org-hop-files'."
       (and todo (concat (propertize "#" 'face 'shadow) todo " "))
       (with-current-buffer (marker-buffer marker)
         (goto-char (marker-position marker))
-        (org-format-outline-path (org-get-outline-path t t)
-                                 org-hop-headings-width))
-      (and tags (concat " " (propertize (format tags 'face 'org-tag)))))
+        (org-format-outline-path
+         (org-get-outline-path t t)
+         org-hop-headings-width
+         (and org-hop-headings-show-filename
+              (propertize (concat (buffer-name) ":")
+                          'face 'font-lock-comment-face))))
+      (and tags (concat " " (propertize tags 'face 'org-tag))))
      'org-marker marker)))
 
 (defun org-hop--format-line ()
