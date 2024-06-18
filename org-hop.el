@@ -139,40 +139,33 @@ This function is controlled by the variable `org-hop-files'."
      (mapcar #'file-truename org-hop-files-ignore))))
 
 
-;;;; Heading & line data
+;;;; Format Org heading & line
 
-(defun org-hop-format-heading (buffer path)
-  "Format heading title info from BUFFER and Org heading PATH."
-  (let ((todo (and org-hop-headings-show-todo-prefix (org-get-todo-state)))
-        (heading (org-format-outline-path path org-hop-headings-width))
-        (tags (and org-hop-headings-show-tags (org-get-tags))))
-    (concat
-     (and todo (format "#%s " todo))
-     (and org-hop-headings-show-filename (format "%s:/" buffer))
-     heading
-     (and tags (propertize (format " %s" (org-make-tag-string tags))
-                           'face 'org-tag)))))
+(defun org-hop--format-heading (heading)
+  "Return HEADING as an outline string with text properties."
+  (let ((todo (and org-hop-headings-show-todo-prefix
+                   (org-element-property :todo-keyword heading)))
+        (tags (org-make-tag-string (org-element-property :tags heading)))
+        (marker (point-marker)))
+    (propertize
+     (concat
+      (and todo (concat (propertize "#" 'face 'shadow) todo " "))
+      (with-current-buffer (marker-buffer marker)
+        (goto-char (marker-position marker))
+        (org-format-outline-path (org-get-outline-path t t)
+                                 org-hop-headings-width))
+      (and tags (concat " " (propertize (format tags 'face 'org-tag)))))
+     'org-marker marker)))
 
-(defun org-hop-format-line (buffer line-number)
-  "Format line title info for BUFFER and LINE-NUMBER."
-  (string-remove-suffix
-   "\n" (format "%s:%s   %s"
-                buffer line-number (string-trim (thing-at-point 'line)))))
-
-(cl-defun org-hop-get-entry (&optional (type 'heading))
-  "Get data from Org heading at point.
-Default TYPE is \\='heading; otherwise, get data from line at point."
-  (let* ((marker (point-marker))
-         (title  (if (eq type 'heading)
-                     (org-hop-format-heading (marker-buffer marker)
-                                             (org-get-outline-path t t))
-                   (org-hop-format-line (marker-buffer marker)
-                                        (line-number-at-pos)))))
-    (if (eq type 'heading)
-        (put-text-property 0 1 'org-marker marker title)
-      (put-text-property 0 1 'consult-location
-                         (cons marker (line-number-at-pos)) title))
-    title))
+(defun org-hop--format-line ()
+  "Return current line as a string with text properties."
+  (let ((marker (point-marker))
+        (line-number (line-number-at-pos)))
+    (propertize
+     (format "%s:%s  %s"
+             (marker-buffer marker) line-number
+             (string-trim (thing-at-point 'line)))
+     'consult-location (cons marker line-number))))
 
 
 ;;;; Scan Org files
