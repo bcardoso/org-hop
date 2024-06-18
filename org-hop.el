@@ -293,6 +293,17 @@ If VERBOSE is non-nil, show messages in echo area."
   (unless (org-hop-add-heading-to-list verbose)
     (org-hop-add-line-to-list verbose)))
 
+(define-minor-mode org-hop-recent-mode
+  "Toggle `org-hop-recent-mode'.
+When idle, add current Org heading to `org-hop-recent-headings-list'."
+  :init-value nil
+  :lighter nil
+  :group 'org-hop
+  (if org-hop-recent-mode
+      (run-with-idle-timer org-hop-recent-idle-interval t
+                           #'org-hop-add-heading-to-list)
+    (cancel-function-timers #'org-hop-add-heading-to-list)))
+
 
 ;;;; Remove entries from recent lists
 
@@ -321,9 +332,6 @@ If VERBOSE is non-nil, show messages in echo area."
     (org-hop-remove entry org-hop-recent-lines-list))
   (message "Buffer or heading vanished."))
 
-
-;;;;; Interactively remove entries
-
 (defmacro org-hop-remove-from-list (recent-list &optional arg)
   "Remove an item from a RECENT-LIST using `completing-read'.
 With optional argument ARG, set RECENT-LIST to nil."
@@ -346,18 +354,16 @@ With optional argument ARG, set list to nil."
   (org-hop-remove-from-list org-hop-recent-lines-list arg))
 
 
-
-;;;; Commands
+;;;; Reset caches
 
 (defun org-hop-reset-recent-lists ()
   "Reset recent entries lists."
   (interactive)
-  (setq org-hop-recent-headings-list nil
-        org-hop-recent-lines-list    nil))
+  (setq org-hop-recent-headings-list nil)
+  (setq org-hop-recent-lines-list    nil))
 
 (defun org-hop-reset-caches ()
   "Reset Org caches and rebuild `org-hop-headings-list'."
-  (interactive)
   (message "[org-hop] Resetting caches...")
   (setq org-ql-cache (make-hash-table :weakness 'key))
   (org-hop-reset-recent-lists)
@@ -374,6 +380,9 @@ With a double prefix argument, run `org-hop-reset-caches'."
   (cond ((eq (prefix-numeric-value arg) 4) (org-hop-reset-recent-lists))
         ((eq (prefix-numeric-value arg) 16) (org-hop-reset-caches))
         (t (org-hop-headings-list-update))))
+
+
+;;;; Commands
 
 ;;;###autoload
 (defun org-hop (&optional arg)
@@ -405,17 +414,6 @@ With optional argument ARG, add current position as line."
   (if arg
       (org-hop-add-line-to-list t)
     (org-hop-add-entry-at-point t)))
-
-(define-minor-mode org-hop-recent-mode
-  "Toggle `org-hop-recent-mode'.
-When idle, add current Org heading to `org-hop-recent-headings-list'."
-  :init-value nil
-  :lighter nil
-  :group 'org-hop
-  (if org-hop-recent-mode
-      (run-with-idle-timer org-hop-recent-idle-interval t
-                           #'org-hop-add-heading-to-list)
-    (cancel-function-timers #'org-hop-add-heading-to-list)))
 
 
 (provide 'org-hop)
