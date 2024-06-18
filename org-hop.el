@@ -184,10 +184,10 @@ NARROW and SORT are arguments for `org-ql-select', which see."
          (query (or (org-ql--query-string-to-sexp pattern) t)))
     (when (and buffers-files query)
       (ignore-errors
-        ;; Ignore errors that might be caused by partially typed queries
         (org-ql-select buffers-files query
           :narrow narrow
-          :action #'org-hop-get-entry
+          :action (lambda ()
+                    (org-hop--format-heading (org-element-at-point)))
           :sort sort)))))
 
 (defun org-hop-buffers-modified-tick-p ()
@@ -265,37 +265,32 @@ Optional argument OTHER-WINDOW selects the buffer in other window."
                        (cons ,entry (delete ,entry ,recent-list))
                        :test #'equal :from-end t)))
 
-(defun org-hop-add-entry (type verbose)
-  "Add ENTRY to its recently visited list TYPE.
-If VERBOSE is non-nil, show messages in echo area."
-  (let ((entry (org-hop-get-entry type)))
-    (when verbose
-      (message "Saved: %s" entry))
-    (if (eq type 'heading)
-        (org-hop-add entry org-hop-recent-headings-list)
-      (org-hop-add entry org-hop-recent-lines-list))))
-
 (defun org-hop-add-heading-to-list (&optional verbose)
-  "Add current Org heading to recent list.
-If VERBOSE is non-nil, show messages in echo area."
+  "Add current Org heading to `org-hop-recent-headings-list'.
+If VERBOSE is non-nil, show message in echo area."
   (interactive)
   (save-excursion
     (and (derived-mode-p 'org-mode)
          (buffer-file-name) ;; NOTE: ignore indirect/capture buffers
-         (org-back-to-heading t)
-         (org-hop-add-entry 'heading verbose))))
+         (prog1
+             (org-back-to-heading t)
+           (let ((heading (org-hop--format-heading (org-element-at-point))))
+             (org-hop-add heading org-hop-recent-headings-list)
+             (and verbose (message "Saved: %s" heading)))))))
 
 (defun org-hop-add-line-to-list (&optional verbose)
-  "Add current line to recent list.
-If VERBOSE is non-nil, show messages in echo area."
+  "Add current line to `org-hop-recent-lines-list'.
+If VERBOSE is non-nil, show message in echo area."
   (interactive)
-  (org-hop-add-entry 'line verbose))
+  (let ((line (org-hop--format-line)))
+    (org-hop-add line org-hop-recent-lines-list)
+    (and verbose (message "Saved: %s" line))))
 
 (defun org-hop-add-entry-at-point (&optional verbose)
   "Add entry at point, an Org heading or buffer line, to recent list.
 If VERBOSE is non-nil, show messages in echo area."
   (interactive)
-  (when (not (org-hop-add-heading-to-list verbose))
+  (unless (org-hop-add-heading-to-list verbose)
     (org-hop-add-line-to-list verbose)))
 
 
