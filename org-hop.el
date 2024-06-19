@@ -145,31 +145,37 @@ This function is controlled by the variable `org-hop-files'."
   "Return HEADING as an outline string with text properties."
   (let ((todo (and org-hop-headings-show-todo-prefix
                    (org-element-property :todo-keyword heading)))
-        (tags (org-make-tag-string (org-element-property :tags heading)))
+        (tags (and org-hop-headings-show-tags
+                   (org-element-property :tags heading)))
         (marker (point-marker)))
-    (propertize
-     (concat
-      (and todo (concat (propertize "#" 'face 'shadow) todo " "))
-      (with-current-buffer (marker-buffer marker)
-        (goto-char (marker-position marker))
-        (org-format-outline-path
-         (org-get-outline-path t t)
-         org-hop-headings-width
-         (and org-hop-headings-show-filename
-              (propertize (concat (buffer-name) ":")
-                          'face 'font-lock-comment-face))))
-      (and tags (concat " " (propertize tags 'face 'org-tag))))
-     'org-marker marker)))
+    (cons
+     (propertize
+      (concat
+       (and todo (concat (propertize "#" 'face 'shadow) todo " "))
+       (with-current-buffer (marker-buffer marker)
+         (goto-char (marker-position marker))
+         (org-format-outline-path
+          (org-get-outline-path t t)
+          org-hop-headings-width
+          (and org-hop-headings-show-filename
+               (propertize (concat (buffer-name) ":")
+                           'face 'font-lock-comment-face))))
+       (and tags (concat " " (propertize (org-make-tag-string tags)
+                                         'face 'org-tag))))
+      'org-marker marker)
+     marker)))
 
 (defun org-hop--format-line ()
   "Return current line as a string with text properties."
   (let ((marker (point-marker))
         (line-number (line-number-at-pos)))
-    (propertize
-     (format "%s:%s  %s"
-             (marker-buffer marker) line-number
-             (string-trim (thing-at-point 'line)))
-     'consult-location (cons marker line-number))))
+    (cons
+     (propertize
+      (format "%s:%s   %s"
+              (marker-buffer marker) line-number
+              (string-trim (thing-at-point 'line)))
+      'consult-location (cons marker line-number))
+     marker)))
 
 
 ;;;; Scan Org files
@@ -192,6 +198,7 @@ NARROW and SORT are arguments for `org-ql-select', which see."
           :narrow narrow
           :action (lambda ()
                     (org-hop--format-heading (org-element-at-point)))
+          ;; (org-element-headline-parser)))
           :sort sort)))))
 
 (defun org-hop-buffers-modified-tick-p ()
@@ -210,12 +217,14 @@ NARROW and SORT are arguments for `org-ql-select', which see."
     (setq org-hop-headings-list (org-hop-headings))))
 
 
-;;;;; Actions
+;;;; Actions
 
 (defun org-hop--entry-marker (entry)
   "Return ENTRY marker."
-  (or (get-text-property 0 'org-marker entry)
-      (car (get-text-property 0 'consult-location entry))))
+  (if (markerp entry)
+      entry
+    (or (get-text-property 0 'org-marker entry)
+        (car (get-text-property 0 'consult-location entry)))))
 
 (defun org-hop-to-entry (entry &optional other-window)
   "Hop to ENTRY.
@@ -280,7 +289,7 @@ If VERBOSE is non-nil, show message in echo area."
              (org-back-to-heading t)
            (let ((heading (org-hop--format-heading (org-element-at-point))))
              (org-hop-add heading org-hop-recent-headings-list)
-             (and verbose (message "Saved: %s" heading)))))))
+             (and verbose (message "Saved: %s" (car heading))))))))
 
 (defun org-hop-add-line-to-list (&optional verbose)
   "Add current line to `org-hop-recent-lines-list'.
@@ -288,7 +297,7 @@ If VERBOSE is non-nil, show message in echo area."
   (interactive)
   (let ((line (org-hop--format-line)))
     (org-hop-add line org-hop-recent-lines-list)
-    (and verbose (message "Saved: %s" line))))
+    (and verbose (message "Saved: %s" (car line)))))
 
 (defun org-hop-add-entry-at-point (&optional verbose)
   "Add entry at point, an Org heading or buffer line, to recent list.
@@ -398,7 +407,7 @@ With optional argument ARG, run `org-hop-reset', which see."
                            org-hop-recent-lines-list
                            org-hop-headings-list))
          (entry (completing-read "Hop to: " headings)))
-    (org-hop-to-entry entry)))
+    (org-hop-to-entry (alist-get entry headings  nil nil #'equal))))
 
 ;;;###autoload
 (defun org-hop-current-buffer ()
@@ -407,7 +416,7 @@ With optional argument ARG, run `org-hop-reset', which see."
   (if (derived-mode-p 'org-mode)
       (let* ((headings (org-hop-headings :buffers-files (current-buffer)))
              (entry (completing-read "Hop to: " headings)))
-        (org-hop-to-entry entry))
+        (org-hop-to-entry (alist-get entry headings  nil nil #'equal)))
     (user-error "Not an Org file")))
 
 ;;;###autoload

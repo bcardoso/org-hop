@@ -40,7 +40,7 @@
         :action   #'org-hop-to-entry
         :items    (lambda ()
                     (org-hop-headings-list-update)
-                    org-hop-headings-list))
+                    (mapcar #'car org-hop-headings-list)))
   "Consult source for Org Headings.")
 
 (defvar consult-org-hop--recent-headings-source
@@ -50,7 +50,7 @@
         :sort     nil
         :category 'org-heading
         :action   #'org-hop-to-entry
-        :items    (lambda () org-hop-recent-headings-list))
+        :items    (lambda () (mapcar #'car org-hop-recent-headings-list)))
   "Consult source for recent Org Headings.")
 
 (defvar consult-org-hop--recent-lines-source
@@ -60,7 +60,7 @@
         :sort     nil
         :category 'consult-location
         :action   #'org-hop-to-entry
-        :items    (lambda () org-hop-recent-lines-list))
+        :items    (lambda () (mapcar #'car org-hop-recent-lines-list)))
   "Consult source for saved lines.")
 
 ;;;###autoload
