@@ -213,10 +213,11 @@ NARROW and SORT are arguments for `org-ql-select', which see."
     (when (/= sum last-sum)
       (set-register 'org-hop-buffers-tick-sum sum))))
 
-(defun org-hop-headings-list-update ()
+(defun org-hop-headings-list-update (&optional force-update)
   "Update `org-hop-headings-list' if necessary."
   (when (or (not org-hop-headings-list)
-            (org-hop-buffers-modified-tick-p))
+            (org-hop-buffers-modified-tick-p)
+            force-update)
     (setq org-hop-headings-list (org-hop-headings))))
 
 
@@ -397,7 +398,7 @@ With a double prefix argument, run `org-hop-reset-caches'."
   (interactive "P")
   (cond ((eq (prefix-numeric-value arg) 4) (org-hop-reset-recent-lists))
         ((eq (prefix-numeric-value arg) 16) (org-hop-reset-caches))
-        (t (org-hop-headings-list-update))))
+        (t (org-hop-headings-list-update :force-update))))
 
 
 ;;;; Commands
