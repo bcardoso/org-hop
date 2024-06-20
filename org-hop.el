@@ -117,6 +117,11 @@ relative to the selected window.  See `recenter'."
   :group 'org-hop
   :type '(repeat (choice symbol)))
 
+(defface org-hop-file-face
+  '((t (:inherit (shadow))))
+  "Face for the file name part of the candidate."
+  :group 'org-hop)
+
 
 ;;;; Org files
 
@@ -160,7 +165,7 @@ This function is controlled by the variable `org-hop-files'."
                                     (and org-hop-headings-show-filename
                                          (propertize
                                           (concat (buffer-name) ":")
-                                          'face 'shadow)))
+                                          'face 'org-hop-file-face)))
            (and tags (concat " " (propertize (org-make-tag-string tags)
                                              'face 'org-tag))))))
     (put-text-property 0 1 'org-marker (point-marker) candidate)
