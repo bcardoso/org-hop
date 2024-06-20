@@ -346,7 +346,7 @@ With optional argument ARG, run `org-hop-reset', which see."
 
 ;;;###autoload
 (defun helm-org-hop-current-buffer (&optional arg)
-  "Helm for Org headings in current file.
+  "Helm for Org headings in current buffer.
 With optional argument ARG, switch to buffer first."
   (interactive "P")
   (when arg (call-interactively #'switch-to-buffer))

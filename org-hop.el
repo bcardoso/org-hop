@@ -405,7 +405,7 @@ With optional argument ARG, run `org-hop-reset', which see."
                            org-hop-recent-lines-list
                            org-hop-headings-list))
          (entry (completing-read "Hop to: " headings)))
-    (org-hop-to-entry (alist-get entry headings  nil nil #'equal))))
+    (org-hop-to-entry (alist-get entry headings nil nil #'equal))))
 
 ;;;###autoload
 (defun org-hop-current-buffer ()
@@ -414,7 +414,7 @@ With optional argument ARG, run `org-hop-reset', which see."
   (if (derived-mode-p 'org-mode)
       (let* ((headings (org-hop-headings :buffers-files (current-buffer)))
              (entry (completing-read "Hop to: " headings)))
-        (org-hop-to-entry (alist-get entry headings  nil nil #'equal)))
+        (org-hop-to-entry (alist-get entry headings nil nil #'equal)))
     (user-error "Not an Org file")))
 
 ;;;###autoload
