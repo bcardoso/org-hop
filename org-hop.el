@@ -328,9 +328,9 @@ When idle, add current Org heading to `org-hop-recent-headings-list'."
   "Remove an ENTRY from RECENT-LIST.
 If VERBOSE is non-nil, show messages in echo area."
   `(progn
-     (setq ,recent-list (remove entry ,recent-list))
+     (setq ,recent-list (remove ,entry ,recent-list))
      (when (or ,verbose (called-interactively-p 'any))
-       (message "Removed from recent list: %s" entry))))
+       (message "Entry removed recent list."))))
 
 (defun org-hop-remove-heading (entry &optional verbose)
   "Remove ENTRY from recent headings list.
@@ -349,14 +349,15 @@ If VERBOSE is non-nil, show messages in echo area."
     (org-hop-remove entry org-hop-recent-lines-list))
   (message "Buffer or heading vanished."))
 
-(defmacro org-hop-remove-from-list (recent-list &optional arg)
+(defmacro org-hop-remove-from-list (recent-list &optional clear)
   "Remove an item from a RECENT-LIST using `completing-read'.
-With optional argument ARG, set RECENT-LIST to nil."
-  `(if ,arg
-       (setq ,recent-list nil)
-     (let* ((entry (completing-read "Remove from list: " ,recent-list))
-            (item (cdr (assoc entry ,recent-list))))
-       (org-hop-remove item ,recent-list))))
+With optional argument CLEAR, set RECENT-LIST to nil."
+  `(if (not ,recent-list)
+       (message "List is empty.")
+     (if ,clear
+         (setq ,recent-list nil)
+       (let* ((entry (completing-read "Remove from list: " ,recent-list)))
+         (org-hop-remove (assoc entry ,recent-list) ,recent-list)))))
 
 (defun org-hop-remove-heading-from-list (&optional arg)
   "Remove an item from a recent list using `completing-read'.
