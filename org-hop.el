@@ -172,14 +172,15 @@ This function is controlled by the variable `org-hop-files'."
     (cons candidate marker)))
 
 (defun org-hop--format-line ()
-"Return current line as a string with text properties."
-(let ((marker (point-marker))
-      (line-number (line-number-at-pos))
-      (candidate (format "%s:%s   %s"
-                         (marker-buffer marker) line-number
-                         (string-trim (thing-at-point 'line)))))
-  (put-text-property 0 1 'consult-location (cons marker line-number))
-  (cons propertize marker)))
+  "Return current line as a string with text properties."
+  (let* ((marker (point-marker))
+         (line-number (line-number-at-pos))
+         (candidate (format "%s:%s   %s"
+                            (marker-buffer marker) line-number
+                            (string-trim (thing-at-point 'line))))
+         (prop (cons marker line-number)))
+    (put-text-property 0 1 'consult-location prop candidate)
+    (cons candidate marker)))
 
 
 ;;;; Scan Org files
@@ -260,7 +261,7 @@ Optional argument OTHER-WINDOW selects the buffer in other window."
 (defmacro org-hop-with-entry-buffer (entry &rest body)
   "Execute the forms in BODY with ENTRY location temporarily current."
   (declare (indent defun))
-  `(when-let ((marker (org-hop--entry-marker entry)))
+  `(when-let ((marker (org-hop--entry-marker ,entry)))
      (save-excursion
        (with-current-buffer (marker-buffer marker)
          (goto-char (marker-position marker))
