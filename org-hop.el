@@ -141,41 +141,40 @@ This function is controlled by the variable `org-hop-files'."
 
 ;;;; Format Org heading & line
 
-(defun org-hop--format-heading (heading)
-  "Return HEADING as an outline string with text properties."
-  (let ((todo (and org-hop-headings-show-todo-prefix
-                   (org-element-property :todo-keyword heading)))
-        (tags (and org-hop-headings-show-tags
-                   (org-element-property :tags heading)))
-        (marker (point-marker)))
-    (cons
-     (propertize
-      (concat
-       (and todo (concat (propertize "#" 'face 'shadow) todo " "))
-       (with-current-buffer (marker-buffer marker)
-         (goto-char (marker-position marker))
-         (org-format-outline-path
-          (org-get-outline-path t t)
-          org-hop-headings-width
-          (and org-hop-headings-show-filename
-               (propertize (concat (buffer-name) ":")
-                           'face 'font-lock-comment-face))))
-       (and tags (concat " " (propertize (org-make-tag-string tags)
-                                         'face 'org-tag))))
-      'org-marker marker)
-     marker)))
+(defun org-hop--format-heading (&optional current-heading)
+  "Return CURRENT-HEADING as an outline string with text properties."
+  (let* ((heading (or current-heading (org-element-at-point-no-context)))
+         (marker (point-marker))
+         (todo (and org-hop-headings-show-todo-prefix
+                    (org-element-property :todo-keyword heading)))
+         (tags (and org-hop-headings-show-tags
+                    (org-element-property :tags heading)))
+         (candidate
+          (concat
+           (and todo
+                (concat (propertize "#" 'face 'shadow)
+                        (propertize todo 'face (org-get-todo-face todo))
+                        " "))
+           (org-format-outline-path (org-get-outline-path t t)
+                                    org-hop-headings-width
+                                    (and org-hop-headings-show-filename
+                                         (propertize
+                                          (concat (buffer-name) ":")
+                                          'face 'shadow)))
+           (and tags (concat " " (propertize (org-make-tag-string tags)
+                                             'face 'org-tag))))))
+    (put-text-property 0 1 'org-marker (point-marker) candidate)
+    (cons candidate marker)))
 
 (defun org-hop--format-line ()
-  "Return current line as a string with text properties."
-  (let ((marker (point-marker))
-        (line-number (line-number-at-pos)))
-    (cons
-     (propertize
-      (format "%s:%s   %s"
-              (marker-buffer marker) line-number
-              (string-trim (thing-at-point 'line)))
-      'consult-location (cons marker line-number))
-     marker)))
+"Return current line as a string with text properties."
+(let ((marker (point-marker))
+      (line-number (line-number-at-pos))
+      (candidate (format "%s:%s   %s"
+                         (marker-buffer marker) line-number
+                         (string-trim (thing-at-point 'line)))))
+  (put-text-property 0 1 'consult-location (cons marker line-number))
+  (cons propertize marker)))
 
 
 ;;;; Scan Org files
@@ -196,9 +195,7 @@ NARROW and SORT are arguments for `org-ql-select', which see."
       (ignore-errors
         (org-ql-select buffers-files query
           :narrow narrow
-          :action (lambda ()
-                    (org-hop--format-heading (org-element-at-point)))
-          ;; (org-element-headline-parser)))
+          :action #'org-hop--format-heading
           :sort sort)))))
 
 (defun org-hop-buffers-modified-tick-p ()
@@ -224,7 +221,8 @@ NARROW and SORT are arguments for `org-ql-select', which see."
   (if (markerp entry)
       entry
     (or (get-text-property 0 'org-marker entry)
-        (car (get-text-property 0 'consult-location entry)))))
+        (car (get-text-property 0 'consult-location entry))
+        (get-text-property 0 'consult--candidate entry))))
 
 (defun org-hop-to-entry (entry &optional other-window)
   "Hop to ENTRY.
@@ -287,7 +285,7 @@ If VERBOSE is non-nil, show message in echo area."
          (buffer-file-name) ;; NOTE: ignore indirect/capture buffers
          (prog1
              (org-back-to-heading t)
-           (let ((heading (org-hop--format-heading (org-element-at-point))))
+           (let ((heading (org-hop--format-heading)))
              (org-hop-add heading org-hop-recent-headings-list)
              (and verbose (message "Saved: %s" (car heading))))))))
 
