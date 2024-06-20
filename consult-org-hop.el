@@ -34,7 +34,7 @@
 (defmacro consult-org-hop-build-source (name narrow category items)
   "Build Consult source with properties NAME, NARROW, CATEGORY, and ITEMS."
   (declare (indent defun))
-  `(list :name     ,name
+  `(list :name     ,(propertize name 'face 'shadow)
          :prompt   "Hop to: "
          :narrow   ,narrow
          :category ,category
@@ -67,17 +67,16 @@
     nil nil 'org-heading
     (lambda ()
       (mapcar #'car
-              (let ((org-hop-headings-show-filename nil))
-                (org-hop-headings :buffers-files (current-buffer))))))
+              (org-hop-headings :buffers-files (current-buffer)))))
   "Consult source for Org headings in current buffer.")
 
 (defcustom consult-org-hop-sources
-'(consult-org-hop--recent-headings-source
-  consult-org-hop--recent-lines-source
-  consult-org-hop--headings-source)
-"Source list for `consult-org-hop'."
-:group 'org-hop
-:type '(repeat (choice symbol)))
+  '(consult-org-hop--recent-headings-source
+    consult-org-hop--recent-lines-source
+    consult-org-hop--headings-source)
+  "Source list for `consult-org-hop'."
+  :group 'org-hop
+  :type '(repeat (choice symbol)))
 
 ;;;###autoload
 (defun consult-org-hop (&optional arg)
@@ -89,9 +88,9 @@ With optional argument ARG, run `org-hop-reset', which see."
 
 ;;;###autoload
 (defun consult-org-hop-current-buffer ()
-"Consult for Org headings in current buffer."
-(interactive)
-(consult--multi (list consult-org-hop--current-buffer-source) :sort nil))
+  "Consult for Org headings in current buffer."
+  (interactive)
+  (consult--multi (list consult-org-hop--current-buffer-source) :sort nil))
 
 
 (provide 'consult-org-hop)
