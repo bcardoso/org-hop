@@ -31,49 +31,68 @@
 (require 'org-hop)
 (require 'consult)
 
+(defmacro consult-org-hop-build-source (name narrow category items)
+  "Build Consult source with properties NAME, NARROW, CATEGORY, and ITEMS."
+  (declare (indent defun))
+  `(list :name     ,name
+         :prompt   "Hop to: "
+         :narrow   ,narrow
+         :category ,category
+         :action   #'org-hop-to-entry
+         :items    ,items
+         :sort     nil))
+
 (defvar consult-org-hop--headings-source
-  (list :name     "Org headings"
-        :prompt   "Hop to: "
-        :narrow   ?h
-        :sort     nil
-        :category 'org-heading
-        :action   #'org-hop-to-entry
-        :items    (lambda ()
-                    (org-hop-headings-list-update)
-                    (mapcar #'car org-hop-headings-list)))
+  (consult-org-hop-build-source
+    "Org headings" ?h 'org-heading
+    (lambda ()
+      (org-hop-headings-list-update)
+      (mapcar #'car org-hop-headings-list)))
   "Consult source for Org Headings.")
 
 (defvar consult-org-hop--recent-headings-source
-  (list :name     "Recent Org headings"
-        :prompt   "Hop to: "
-        :narrow   ?r
-        :sort     nil
-        :category 'org-heading
-        :action   #'org-hop-to-entry
-        :items    (lambda () (mapcar #'car org-hop-recent-headings-list)))
+  (consult-org-hop-build-source
+    "Recent Org headings" ?r 'org-heading
+    (lambda () (mapcar #'car org-hop-recent-headings-list)))
   "Consult source for recent Org Headings.")
 
 (defvar consult-org-hop--recent-lines-source
-  (list :name     "Hop to line"
-        :prompt   "Hop to: "
-        :narrow   ?l
-        :sort     nil
-        :category 'consult-location
-        :action   #'org-hop-to-entry
-        :items    (lambda () (mapcar #'car org-hop-recent-lines-list)))
+  (consult-org-hop-build-source
+    "Hop to line" ?l 'consult-location
+    (lambda () (mapcar #'car org-hop-recent-lines-list)))
   "Consult source for saved lines.")
+
+(defvar consult-org-hop--current-buffer-source
+  (consult-org-hop-build-source
+    nil nil 'org-heading
+    (lambda ()
+      (mapcar #'car
+              (let ((org-hop-headings-show-filename nil))
+                (org-hop-headings :buffers-files (current-buffer))))))
+  "Consult source for Org headings in current buffer.")
+
+(defcustom consult-org-hop-sources
+'(consult-org-hop--recent-headings-source
+  consult-org-hop--recent-lines-source
+  consult-org-hop--headings-source)
+"Source list for `consult-org-hop'."
+:group 'org-hop
+:type '(repeat (choice symbol)))
 
 ;;;###autoload
 (defun consult-org-hop (&optional arg)
-  "Hop to a Org heading with `consult'.
+  "Consult for `org-hop'.
 With optional argument ARG, run `org-hop-reset', which see."
   (interactive "P")
   (org-hop-reset arg)
-  (consult--multi
-   (list consult-org-hop--recent-headings-source
-         consult-org-hop--recent-lines-source
-         consult-org-hop--headings-source)
-   :sort nil))
+  (consult--multi consult-org-hop-sources :sort nil))
+
+;;;###autoload
+(defun consult-org-hop-current-buffer ()
+"Consult for Org headings in current buffer."
+(interactive)
+(consult--multi (list consult-org-hop--current-buffer-source) :sort nil))
+
 
 (provide 'consult-org-hop)
 
