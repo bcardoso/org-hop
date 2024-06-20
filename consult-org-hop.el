@@ -34,7 +34,7 @@
 (defmacro consult-org-hop-build-source (name narrow category items)
   "Build Consult source with properties NAME, NARROW, CATEGORY, and ITEMS."
   (declare (indent defun))
-  `(list :name     ,(propertize name 'face 'shadow)
+  `(list :name     ,name
          :prompt   "Hop to: "
          :narrow   ,narrow
          :category ,category
