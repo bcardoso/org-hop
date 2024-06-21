@@ -4,8 +4,8 @@
 
 ;; Author: Bruno Cardoso <cardoso.bc@gmail.com>
 ;; URL: https://github.com/bcardoso/org-hop
-;; Version: 0.1
-;; Package-Requires: ((emacs "29.3"))
+;; Version: 0.3.1
+;; Package-Requires: ((emacs "29.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
