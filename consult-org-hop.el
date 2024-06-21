@@ -90,7 +90,10 @@ With optional argument ARG, run `org-hop-reset', which see."
 (defun consult-org-hop-current-buffer ()
   "Consult for Org headings in current buffer."
   (interactive)
-  (consult--multi (list consult-org-hop--current-buffer-source) :sort nil))
+  (if (derived-mode-p 'org-mode)
+      (consult--multi
+       (list consult-org-hop--current-buffer-source) :sort nil)
+    (user-error "Not an Org buffer")))
 
 
 (provide 'consult-org-hop)

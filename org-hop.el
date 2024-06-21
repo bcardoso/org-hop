@@ -424,7 +424,7 @@ With optional argument ARG, run `org-hop-reset', which see."
       (let* ((headings (org-hop-headings :buffers-files (current-buffer)))
              (entry (completing-read "Hop to: " headings)))
         (org-hop-to-entry (alist-get entry headings nil nil #'equal)))
-    (user-error "Not an Org file")))
+    (user-error "Not an Org buffer")))
 
 ;;;###autoload
 (defun org-hop-add-heading-or-line (&optional arg)

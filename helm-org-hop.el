@@ -350,7 +350,7 @@ With optional argument ARG, run `org-hop-reset', which see."
 With optional argument ARG, switch to buffer first."
   (interactive "P")
   (when arg (call-interactively #'switch-to-buffer))
-  (if (eq major-mode 'org-mode)
+  (if (derived-mode-p 'org-mode)
       (helm :buffer "*helm-org-hop*"
             :ff-transformer-show-only-basename nil
             :sources (helm-org-hop-build-recent-source
@@ -358,7 +358,7 @@ With optional argument ARG, switch to buffer first."
                       helm-org-hop-headings-actions
                       helm-org-hop-headings-map
                       (org-hop-headings :buffers-files (current-buffer))))
-    (message "Not an Org file.")))
+    (user-error "Not an Org buffer")))
 
 
 (provide 'helm-org-hop)
