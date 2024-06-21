@@ -8,6 +8,9 @@ An interface to hop to Org headings and lines using completing-read.
 
 =helm-org-hop= or =consult-org-hop= provide a richer interface to =org-hop=.
 
+[[file:screenshot.png]]
+
+
 ** Installation
 
 Clone this repo and add it to your =load-path=:
