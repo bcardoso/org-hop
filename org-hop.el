@@ -214,7 +214,8 @@ NARROW and SORT are arguments for `org-ql-select', which see."
       (set-register 'org-hop-buffers-tick-sum sum))))
 
 (defun org-hop-headings-list-update (&optional force-update)
-  "Update `org-hop-headings-list' if necessary."
+  "Update `org-hop-headings-list' only if necessary.
+Or when optional argument FORCE-UPDATE is non-nil."
   (when (or (not org-hop-headings-list)
             (org-hop-buffers-modified-tick-p)
             force-update)
