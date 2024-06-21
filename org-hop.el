@@ -291,11 +291,10 @@ If VERBOSE is non-nil, show message in echo area."
   (save-excursion
     (and (derived-mode-p 'org-mode)
          (buffer-file-name) ;; NOTE: ignore indirect/capture buffers
-         (prog1
-             (org-back-to-heading t)
-           (let ((heading (org-hop--format-heading)))
-             (org-hop-add heading org-hop-recent-headings-list)
-             (and verbose (message "Saved: %s" (car heading))))))))
+         (ignore-errors (org-back-to-heading t))
+         (let ((heading (org-hop--format-heading)))
+           (org-hop-add heading org-hop-recent-headings-list)
+           (and verbose (message "Saved: %s" (car heading)))))))
 
 (defun org-hop-add-line-to-list (&optional verbose)
   "Add current line to `org-hop-recent-lines-list'.
