@@ -6,7 +6,7 @@
 
 An interface to hop to Org headings and lines using completing-read.
 
-Alternatively, =helm-org-hop= provides a richer interface to =org-hop=.
+=helm-org-hop= or =consult-org-hop= provide a richer interface to =org-hop=.
 
 ** Installation
 
@@ -15,7 +15,8 @@ Clone this repo and add it to your =load-path=:
 #+begin_src emacs-lisp
 (add-to-list 'load-path "/path/to/org-hop")
 (require 'org-hop)
-(require 'helm-org-hop) ; optional helm interface
+(require 'helm-org-hop)    ; optional Helm interface
+(require 'consult-org-hop) ; optional Consult interface
 #+end_src
 
 Or, with use-package + straight.el:
@@ -34,6 +35,12 @@ Or, with use-package + straight.el:
   :straight (helm-org-hop :host github :repo "bcardoso/org-hop"
                           :files ("helm-org-hop.el"))
   :bind ("C-c j" . helm-org-hop))
+
+;; optional Consult interface
+(use-package consult-org-hop
+  :straight (consult-org-hop :host github :repo "bcardoso/org-hop"
+                             :files ("consult-org-hop.el"))
+  :bind ("C-c j" . consult-org-hop))
 #+end_src
 
 
@@ -41,7 +48,7 @@ Or, with use-package + straight.el:
 
 Just run =M-x org-hop= or with the suggested binding =C-c h=.
 
-If you are a Helm user, =M-x helm-org-hop= or =C-c j=.
+Or run your preferred command: =M-x helm-org-hop= or =M-x consult-org-hop=.
 
 Either way, =org-hop= will build a list with all findable Org headings (see next section). Additionally, you can store markers to any Org heading or buffer line with the following commands:
 
@@ -53,7 +60,7 @@ With the =helm-org-hop= interface, besides hopping, you can store/insert a link 
 
 The =org-hop-recent-mode= keeps track of the headings you spend some time in (see =org-hop-recent-idle-interval=).
 
-Recent headings and line are shown at the top of the general headings list. To remove them, run =M-x org-hop-remove-heading-from-list= or =M-x org-hop-remove-line-from-list=.
+Recent headings and lines are shown at the top of the general headings list. To remove them, run =M-x org-hop-remove-heading-from-list= or =M-x org-hop-remove-line-from-list=.
 
 
 ** Customization
@@ -85,6 +92,8 @@ By default, =org-hop= will scan all open Org buffers. You can also edit the vari
 
 Use the variable =org-hop-files-ignore= to specify a list of Org files that should be ignored.
 
+You can also add other sources to =helm-org-hop= or =consult-org-hop= commands. See, for example, how to display the current heading's backlinks with [[https://github.com/bcardoso/org-backlinks#integration][org-backlinks integration]].
+
 
 ** Related packages
 
@@ -110,8 +119,10 @@ Use the variable =org-hop-files-ignore= to specify a list of Org files that shou
 
 ** Changelog
 
-- v0.3 :: use [[https://github.com/alphapapa/org-ql][org-ql]] to select Org headings.
+- v0.3.1 :: add [[https://github.com/minad/consult/][consult]] support & bugfixes.
 
-- v0.2 :: select Org headings with custom cache.
+- v0.3.0 :: use [[https://github.com/alphapapa/org-ql][org-ql]] to select Org headings.
 
-- v0.1 :: initial concept.
+- v0.2.0 :: select Org headings with custom cache.
+
+- v0.1.0 :: initial concept & [[https://github.com/emacs-helm/helm][helm]] interface.
