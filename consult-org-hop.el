@@ -78,21 +78,42 @@
   :group 'org-hop
   :type '(repeat (choice symbol)))
 
+(defvar-keymap consult-org-hop-keymap
+  :doc "Keymap for `consult-org-hop'."
+  "M-i" #'consult-org-hop-to-org-ql-find)
+
+(declare-function org-ql-find "org-ql-find")
+(declare-function embark--quit-and-run "embark")
+
+;; REVIEW 2024-06-23: works, but is there a better way?
+(defun consult-org-hop-to-org-ql-find ()
+  (interactive)
+  (let ((input (minibuffer-contents-no-properties))
+        (org-ql-default-predicate 'rifle))
+    (embark--quit-and-run
+     (lambda ()
+       (minibuffer-with-setup-hook
+           (lambda () (insert input))
+         (org-ql-find (org-buffer-list)))))))
+
 ;;;###autoload
 (defun consult-org-hop (&optional arg)
   "Consult for `org-hop'.
 With optional argument ARG, run `org-hop-reset', which see."
   (interactive "P")
   (org-hop-reset arg)
-  (consult--multi consult-org-hop-sources :sort nil))
+  (consult--multi consult-org-hop-sources
+                  :sort nil
+                  :keymap consult-org-hop-keymap))
 
 ;;;###autoload
 (defun consult-org-hop-current-buffer ()
   "Consult for Org headings in current buffer."
   (interactive)
   (if (derived-mode-p 'org-mode)
-      (consult--multi
-       (list consult-org-hop--current-buffer-source) :sort nil)
+      (consult--multi (list consult-org-hop--current-buffer-source)
+                      :sort nil
+                      :keymap consult-org-hop-keymap)
     (user-error "Not an Org buffer")))
 
 
