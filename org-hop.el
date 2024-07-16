@@ -294,8 +294,8 @@ If VERBOSE is non-nil, show message in echo area."
          (ignore-errors (org-back-to-heading t))
          (let ((heading (org-hop--format-heading)))
            (org-hop-add heading org-hop-recent-headings-list)
-           (and verbose (message "Saved: %s" (car heading))))
-         t)))
+           (and verbose (message "Saved: %s" (car heading)))
+           t))))
 
 (defun org-hop-add-line-to-list (&optional verbose)
   "Add current line to `org-hop-recent-lines-list'.
