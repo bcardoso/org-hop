@@ -78,7 +78,7 @@
   :group 'org-hop
   :type '(repeat (choice symbol)))
 
-(defvar-keymap consult-org-hop-keymap
+(defvar-keymap consult-org-hop-map
   :doc "Keymap for `consult-org-hop'."
   "M-i" #'consult-org-hop-to-org-ql-find)
 
@@ -104,7 +104,7 @@ With optional argument ARG, run `org-hop-reset', which see."
   (org-hop-reset arg)
   (consult--multi consult-org-hop-sources
                   :sort nil
-                  :keymap consult-org-hop-keymap))
+                  :keymap consult-org-hop-map))
 
 ;;;###autoload
 (defun consult-org-hop-current-buffer ()
@@ -113,7 +113,7 @@ With optional argument ARG, run `org-hop-reset', which see."
   (if (derived-mode-p 'org-mode)
       (consult--multi (list consult-org-hop--current-buffer-source)
                       :sort nil
-                      :keymap consult-org-hop-keymap)
+                      :keymap consult-org-hop-map)
     (user-error "Not an Org buffer")))
 
 
