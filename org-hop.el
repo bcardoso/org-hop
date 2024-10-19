@@ -399,7 +399,7 @@ With a double prefix argument, run `org-hop-reset-caches'."
   (interactive "P")
   (cond ((eq (prefix-numeric-value arg) 4) (org-hop-reset-recent-lists))
         ((eq (prefix-numeric-value arg) 16) (org-hop-reset-caches))
-        (t (org-hop-headings-list-update :force-update))))
+        (arg (org-hop-headings-list-update :force-update))))
 
 
 ;;;; Commands
@@ -416,12 +416,15 @@ With optional argument ARG, run `org-hop-reset', which see."
          (entry (completing-read "Hop to: " headings)))
     (org-hop-to-entry (alist-get entry headings nil nil #'equal))))
 
+;; TODO 2024-08-15: review args of consult and helm equivalent commands
 ;;;###autoload
-(defun org-hop-current-buffer ()
-  "Hop to a Org heading in current buffer."
+(defun org-hop-current-buffer (&optional buffers-files)
+  "Hop to a Org heading in current buffer.
+When BUFFERS-FILES is a list of Org buffers or files, use it instead."
   (interactive)
-  (if (derived-mode-p 'org-mode)
-      (let* ((headings (org-hop-headings :buffers-files (current-buffer)))
+  (if (or buffers-files (derived-mode-p 'org-mode))
+      (let* ((headings (org-hop-headings
+                        :buffers-files (or buffers-files (current-buffer))))
              (entry (completing-read "Hop to: " headings)))
         (org-hop-to-entry (alist-get entry headings nil nil #'equal)))
     (user-error "Not an Org buffer")))
