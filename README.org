@@ -77,11 +77,11 @@ The customizable variables are accessible through the customize interface:
 By default, =org-hop= will scan all open Org buffers. You can also edit the variables =org-hop-files= and =org-hop-files-extra= to a group of specific files:
 
 #+begin_src emacs-lisp
-(setq org-hop-files 'buffers)        ;; the list of open Org buffers (default)
+(setq org-hop-files 'buffers) ;; the list of open Org buffers (default)
 
-(setq org-hop-files 'agenda)         ;; the list of Org agenda files
+(setq org-hop-files 'agenda)  ;; the list of Org agenda files
 
-(setq org-hop-files 'org-files-list) ;; Org agenda files + open Org buffers
+(setq org-hop-files 'files)   ;; Org agenda files + open Org buffers
 
 (setq org-hop-files
       '("x.org" "y.org" "z.org"))    ;; a custom list of Org files
