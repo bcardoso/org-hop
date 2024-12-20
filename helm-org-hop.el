@@ -358,7 +358,7 @@ With optional argument ARG, switch to buffer first."
                       helm-org-hop-headings-actions
                       helm-org-hop-headings-map
                       (org-hop-headings :buffers-files (current-buffer))))
-    (user-error "Not an Org buffer")))
+    (helm-outline)))
 
 
 (provide 'helm-org-hop)
