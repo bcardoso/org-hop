@@ -114,7 +114,7 @@ With optional argument ARG, run `org-hop-reset', which see."
       (consult--multi (list consult-org-hop--current-buffer-source)
                       :sort nil
                       :keymap consult-org-hop-map)
-    (user-error "Not an Org buffer")))
+    (consult-imenu)))
 
 
 (provide 'consult-org-hop)
