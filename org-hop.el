@@ -330,7 +330,7 @@ When idle, add current Org heading to `org-hop-recent-headings-list'."
   "Remove an ENTRY from RECENT-LIST.
 If VERBOSE is non-nil, show messages in echo area."
   `(progn
-     (setq ,recent-list (remove ,entry ,recent-list))
+     (setq ,recent-list (assoc-delete-all ,entry ,recent-list #'equal))
      (when (or ,verbose (called-interactively-p 'any))
        (message "Entry removed recent list."))))
 
