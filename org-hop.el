@@ -72,6 +72,11 @@ Alternatively, this variable can be a custom list of Org files."
   :group 'org-hop
   :type 'boolean)
 
+(defcustom org-hop-headings-filename-prefix ""
+  "Prefix for file names when `org-hop-headings-show-filename' is non-nil."
+  :group 'org-hop
+  :type 'string)
+
 (defcustom org-hop-headings-show-tags t
   "If non-nil, display Org headings tags."
   :group 'org-hop
@@ -164,7 +169,9 @@ This function is controlled by the variable `org-hop-files'."
                                     org-hop-headings-width
                                     (and org-hop-headings-show-filename
                                          (propertize
-                                          (concat (buffer-name) ":")
+                                          (concat
+                                           org-hop-headings-filename-prefix
+                                           (buffer-name) ":")
                                           'face 'org-hop-file-face)))
            (and tags (concat " " (propertize (org-make-tag-string tags)
                                              'face 'org-tag))))))
