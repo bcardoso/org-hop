@@ -345,19 +345,20 @@ With optional argument ARG, run `org-hop-reset', which see."
         :sources helm-org-hop-default-sources))
 
 ;;;###autoload
-(defun helm-org-hop-current-buffer (&optional arg)
+(defun helm-org-hop-current-buffer (&optional buffers-files)
   "Helm for Org headings in current buffer.
-With optional argument ARG, switch to buffer first."
-  (interactive "P")
-  (when arg (call-interactively #'switch-to-buffer))
-  (if (derived-mode-p 'org-mode)
-      (helm :buffer "*helm-org-hop*"
-            :ff-transformer-show-only-basename nil
-            :sources (helm-org-hop-build-recent-source
-                      (format "Org headings for %s" (buffer-name))
-                      helm-org-hop-headings-actions
-                      helm-org-hop-headings-map
-                      (org-hop-headings :buffers-files (current-buffer))))
+When BUFFERS-FILES is a list of Org buffers or files, use it instead."
+  (interactive)
+  (if (or buffers-files (derived-mode-p 'org-mode))
+      (helm
+       :buffer "*helm-org-hop*"
+       :ff-transformer-show-only-basename nil
+       :sources (helm-org-hop-build-recent-source
+                 (format "Org headings for %s" (buffer-name))
+                 helm-org-hop-headings-actions
+                 helm-org-hop-headings-map
+                 (org-hop-headings
+                  :buffers-files (or buffers-files (current-buffer)))))
     (helm-outline)))
 
 

@@ -423,7 +423,6 @@ With optional argument ARG, run `org-hop-reset', which see."
          (entry (completing-read "Hop to: " headings)))
     (org-hop-to-entry (alist-get entry headings nil nil #'equal))))
 
-;; TODO 2024-08-15: review args of consult and helm equivalent commands
 ;;;###autoload
 (defun org-hop-current-buffer (&optional buffers-files)
   "Hop to a Org heading in current buffer.

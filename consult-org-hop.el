@@ -62,14 +62,6 @@
     (lambda () (mapcar #'car org-hop-recent-lines-list)))
   "Consult source for saved lines.")
 
-(defvar consult-org-hop--current-buffer-source
-  (consult-org-hop-build-source
-    nil nil 'org-heading
-    (lambda ()
-      (mapcar #'car
-              (org-hop-headings :buffers-files (current-buffer)))))
-  "Consult source for Org headings in current buffer.")
-
 (defcustom consult-org-hop-sources
   '(consult-org-hop--recent-headings-source
     consult-org-hop--recent-lines-source
@@ -107,13 +99,20 @@ With optional argument ARG, run `org-hop-reset', which see."
                   :keymap consult-org-hop-map))
 
 ;;;###autoload
-(defun consult-org-hop-current-buffer ()
-  "Consult for Org headings in current buffer."
+(defun consult-org-hop-current-buffer (&optional buffers-files)
+  "Consult for Org headings in current buffer.
+When BUFFERS-FILES is a list of Org buffers or files, use it instead."
   (interactive)
-  (if (derived-mode-p 'org-mode)
-      (consult--multi (list consult-org-hop--current-buffer-source)
-                      :sort nil
-                      :keymap consult-org-hop-map)
+  (if (or buffers-files (derived-mode-p 'org-mode))
+      (consult--multi
+       (list
+        (consult-org-hop-build-source
+          nil nil 'org-heading
+          (mapcar #'car
+                  (org-hop-headings
+                   :buffers-files (or buffers-files (current-buffer))))))
+       :sort nil
+       :keymap consult-org-hop-map)
     (consult-imenu)))
 
 
