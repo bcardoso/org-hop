@@ -70,15 +70,22 @@
   :group 'org-hop
   :type '(repeat (choice symbol)))
 
+(defcustom consult-org-hop-capture-key "n"
+  "Org capture template key for new note from minibuffer input."
+  :group 'org-hop
+  :type 'string)
+
 (defvar-keymap consult-org-hop-map
   :doc "Keymap for `consult-org-hop'."
-  "M-i" #'consult-org-hop-to-org-ql-find)
+  "M-i" #'consult-org-hop-to-org-ql-find
+  "M-N" #'consult-org-hop--capture-note)
 
 (declare-function org-ql-find "org-ql-find")
 (declare-function embark--quit-and-run "embark")
 
 ;; REVIEW 2024-06-23: works, but is there a better way?
 (defun consult-org-hop-to-org-ql-find ()
+  "Quit command and run `org-ql-find' with the current minibuffer input."
   (interactive)
   (let ((input (minibuffer-contents-no-properties))
         (org-ql-default-predicate 'rifle))
@@ -87,6 +94,15 @@
        (minibuffer-with-setup-hook
            (lambda () (insert input))
          (org-ql-find (org-buffer-list)))))))
+
+(defun consult-org-hop--capture-note ()
+  "Run Org capture from current minibuffer input."
+  (interactive)
+  (embark--quit-and-run
+   (lambda (input)
+     (org-capture nil consult-org-hop-capture-key)
+     (insert input))
+   (minibuffer-contents-no-properties)))
 
 ;;;###autoload
 (defun consult-org-hop (&optional arg)
