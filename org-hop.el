@@ -393,10 +393,12 @@ With optional argument ARG, set list to nil."
   "Reset Org caches and rebuild `org-hop-headings-list'."
   (message "[org-hop] Resetting caches...")
   (setq org-ql-cache (make-hash-table :weakness 'key))
+  (setq org-ql-tags-cache (make-hash-table :weakness 'key))
+  (setq org-ql-node-value-cache (make-hash-table :weakness 'key))
+  (org-persist-gc)
   (org-hop-reset-recent-lists)
   (setq org-hop-headings-list nil)
   (org-hop-headings-list-update)
-  (org-persist-gc)
   (message "[org-hop] Resetting caches... done"))
 
 (defun org-hop-reset (&optional arg)
