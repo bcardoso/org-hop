@@ -175,7 +175,7 @@ This function is controlled by the variable `org-hop-files'."
                                           'face 'org-hop-file-face)))
            (and tags (concat " " (propertize (org-make-tag-string tags)
                                              'face 'org-tag))))))
-    (put-text-property 0 1 'org-marker (point-marker) candidate)
+    (put-text-property 0 1 'org-marker marker candidate)
     (cons candidate marker)))
 
 (defun org-hop--format-line ()
