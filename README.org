@@ -53,7 +53,7 @@ Just run =M-x org-hop= or with the suggested binding =C-c h=.
 
 Or run your preferred command: =M-x helm-org-hop= or =M-x consult-org-hop=.
 
-Either way, =org-hop= will build a list with all findable Org headings (see next section). Additionally, you can store markers to any Org heading or buffer line with the following commands:
+Either way, =org-hop= builds a list with all findable Org headings (see next section). Additionally, you can store markers to any Org heading or buffer line with the following commands:
 
 - =org-hop-add-heading-to-list=
 - =org-hop-add-line-to-list=
@@ -74,7 +74,7 @@ The customizable variables are accessible through the customize interface:
 - =M-x customize-group RET helm-org-hop=
 
 
-By default, =org-hop= will scan all open Org buffers. You can also edit the variables =org-hop-files= and =org-hop-files-extra= to a group of specific files:
+By default, =org-hop= scans all open Org buffers. You can also set the variables =org-hop-files= and =org-hop-files-extra= to a group of specific files:
 
 #+begin_src emacs-lisp
 (setq org-hop-files 'buffers) ;; the list of open Org buffers (default)
@@ -94,6 +94,8 @@ By default, =org-hop= will scan all open Org buffers. You can also edit the vari
 #+end_src
 
 Use the variable =org-hop-files-ignore= to specify a list of Org files that should be ignored.
+
+The variable =org-hop-files-tiers-regexp-alist= can be used to prioritize headings from specific files, by assigning tier values matching file paths (see docstring for an example).
 
 You can also add other sources to =helm-org-hop= or =consult-org-hop= commands. See, for example, how to display the current heading's backlinks with [[https://github.com/bcardoso/org-backlinks#integration][org-backlinks integration]].
 
