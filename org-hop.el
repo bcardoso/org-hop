@@ -62,6 +62,30 @@ Alternatively, this variable can be a custom list of Org files."
   :group 'org-hop
   :type '(choice file (repeat file)))
 
+(defcustom org-hop-files-tiers-regexp-alist nil
+  "Alist of regexps matching file names and their tier values.
+
+For example, setting this variable to
+
+  `((\"notes\" . 0)
+    (,(rx (or \"config\" \"refs\")) . 1))
+
+will result in all \"notes\" files' headings appearing at the top of the
+`org-hop-headings-list', followed by the headings from files whose paths
+match either \"config\" or \"refs\". Any heading from other files will
+be assigned to the tier defined by `org-hop-files-tier-default'.
+
+When this variable is set to nil, no sorting is done and no tiers are
+applied."
+  :group 'org-hop
+  :type 'sexp)
+
+(defcustom org-hop-files-tier-default 2
+  "Default tier value.
+This is relevant only when `org-hop-files-tiers-regexp-alist' is non-nil."
+  :group 'org-hop
+  :type 'integer)
+
 (defcustom org-hop-headings-show-todo-prefix nil
   "If non-nil, prefix headings with their current Org TODO keyword."
   :group 'org-hop
@@ -149,6 +173,23 @@ This function is controlled by the variable `org-hop-files'."
      (mapcar #'file-truename org-hop-files-ignore))))
 
 
+;;;;; Files tiers
+
+(defun org-hop-files-get-tier (file-name)
+  "Return the tier value for FILE-NAME.
+File tiers values must be defined in `org-hop-files-tiers-regexp-alist'."
+  (or (and (stringp file-name)
+           (assoc-default file-name
+                          org-hop-files-tiers-regexp-alist
+                          #'string-match))
+      org-hop-files-tier-default))
+
+(defun org-hop-files-tiers-sort (a b)
+  "Sort function for file tiers."
+  (< (get-text-property 0 'tier a)
+     (get-text-property 0 'tier b)))
+
+
 ;;;; Format Org heading & line
 
 (defun org-hop--format-heading (&optional current-heading)
@@ -176,6 +217,10 @@ This function is controlled by the variable `org-hop-files'."
            (and tags (concat " " (propertize (org-make-tag-string tags)
                                              'face 'org-tag))))))
     (put-text-property 0 1 'org-marker marker candidate)
+    (and org-hop-files-tiers-regexp-alist
+         (put-text-property 0 1 'tier
+                            (org-hop-files-get-tier (buffer-file-name))
+                            candidate))
     (cons candidate marker)))
 
 (defun org-hop--format-line ()
@@ -226,7 +271,12 @@ Or when optional argument FORCE-UPDATE is non-nil."
   (when (or (not org-hop-headings-list)
             (org-hop-buffers-modified-tick-p)
             force-update)
-    (setq org-hop-headings-list (org-hop-headings))))
+    (setq org-hop-headings-list
+          (if org-hop-files-tiers-regexp-alist
+              (cl-sort (org-hop-headings)
+                       #'org-hop-files-tiers-sort
+                       :key #'car)
+            (org-hop-headings)))))
 
 
 ;;;; Actions
