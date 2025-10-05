@@ -49,17 +49,14 @@ Default values are:
   \\='files       list of Org agenda files + open Org buffers
 
 Alternatively, this variable can be a custom list of Org files."
-  :group 'org-hop
   :type '(choice symbol (repeat file)))
 
 (defcustom org-hop-files-extra nil
   "List of Org files that must always be scanned for headings."
-  :group 'org-hop
   :type '(choice file (repeat file)))
 
 (defcustom org-hop-files-ignore nil
   "List of ignored Org files."
-  :group 'org-hop
   :type '(choice file (repeat file)))
 
 (defcustom org-hop-files-tiers-regexp-alist nil
@@ -77,74 +74,64 @@ be assigned to the tier defined by `org-hop-files-tier-default'.
 
 When this variable is set to nil, no sorting is done and no tiers are
 applied."
-  :group 'org-hop
   :type 'sexp)
 
 (defcustom org-hop-files-tier-default 2
   "Default tier value.
 This is relevant only when `org-hop-files-tiers-regexp-alist' is non-nil."
-  :group 'org-hop
   :type 'integer)
 
 (defcustom org-hop-headings-show-todo-prefix nil
   "If non-nil, prefix headings with their current Org TODO keyword."
-  :group 'org-hop
   :type 'boolean)
 
 (defcustom org-hop-headings-show-filename t
   "If non-nil, display Org file name before headings."
-  :group 'org-hop
   :type 'boolean)
 
 (defcustom org-hop-headings-filename-prefix ""
   "Prefix for file names when `org-hop-headings-show-filename' is non-nil."
-  :group 'org-hop
   :type 'string)
 
 (defcustom org-hop-headings-show-tags t
   "If non-nil, display Org headings tags."
-  :group 'org-hop
   :type 'boolean)
 
 (defcustom org-hop-headings-width 256
   "Max Org heading entry length."
-  :group 'org-hop
   :type 'integer)
 
 (defcustom org-hop-recent-idle-interval 15
   "Idle interval in seconds to add current Org heading to recent list.
 See `org-hop-recent-mode'."
-  :group 'org-hop
   :type 'integer)
 
 (defcustom org-hop-push-to-mark-ring t
   "If non-nil, push current position into the mark ring before hop."
-  :group 'org-hop
   :type 'boolean)
 
 (defcustom org-hop-to-entry-other-window nil
   "If non-nil, switch to entry in other window."
-  :group 'org-hop
   :type 'boolean)
 
 (defcustom org-hop-recenter nil
   "If nil, center point in selected window and maybe redisplay frame.
 With a numeric value, recenter putting point on screen line
 relative to the selected window.  See `recenter'."
-  :group 'org-hop
   :type 'integer)
 
 (defcustom org-hop-pre-hop-hook
   '(org-hop-mark-ring-push)
   "Hook run before hopping to heading or line."
-  :group 'org-hop
   :type '(repeat (choice symbol)))
 
 (defcustom org-hop-post-hop-hook
   '(org-hop-focus-entry org-hop-add-entry-at-point)
   "Hook run after hopping to heading or line."
-  :group 'org-hop
   :type '(repeat (choice symbol)))
+
+
+;;;; Faces
 
 (defface org-hop-file-face
   '((t (:inherit (shadow))))
