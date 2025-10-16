@@ -124,6 +124,10 @@ You can also add other sources to =helm-org-hop= or =consult-org-hop= commands. 
 
 ** Changelog
 
+- v0.3.3 :: user option to define file tiers for heading sorting
+
+- v0.3.2 :: user option for file name prefix
+
 - v0.3.1 :: add [[https://github.com/minad/consult/][consult]] support & bugfixes.
 
 - v0.3.0 :: use [[https://github.com/alphapapa/org-ql][org-ql]] to select Org headings.
