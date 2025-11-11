@@ -32,12 +32,15 @@
 (require 'org)
 (require 'org-ql)
 
+(declare-function org-with-point-at "org-macs")
+
 
 ;;;; Custom variables
 
 (defgroup org-hop nil
   "Group for `org-hop' customizations."
-  :group 'org)
+  :group 'org
+  :group 'org-hop)
 
 (defcustom org-hop-files 'buffers
   "Which Org files should be returned by function `org-hop-files'.
@@ -98,7 +101,7 @@ This is relevant only when `org-hop-files-tiers-regexp-alist' is non-nil."
   :type 'boolean)
 
 (defcustom org-hop-headings-width 256
-  "Max Org heading entry length."
+  "Maximum length for Org heading entries."
   :type 'integer)
 
 (defcustom org-hop-recent-idle-interval 15
@@ -135,8 +138,7 @@ relative to the selected window.  See `recenter'."
 
 (defface org-hop-file-face
   '((t (:inherit (shadow))))
-  "Face for the file name part of the candidate."
-  :group 'org-hop)
+  "Face for the file name part of the candidate.")
 
 
 ;;;; Org files
@@ -173,8 +175,7 @@ File tiers values must be defined in `org-hop-files-tiers-regexp-alist'."
 
 (defun org-hop-files-tiers-sort (a b)
   "Sort function for file tiers."
-  (< (get-text-property 0 'tier a)
-     (get-text-property 0 'tier b)))
+  (< (get-text-property 0 'tier a) (get-text-property 0 'tier b)))
 
 
 ;;;; Format Org heading & line
@@ -308,13 +309,11 @@ Optional argument OTHER-WINDOW selects the buffer in other window."
   "Execute the forms in BODY with ENTRY location temporarily current."
   (declare (indent defun))
   `(when-let ((marker (org-hop--entry-marker ,entry)))
-     (save-excursion
-       (with-current-buffer (marker-buffer marker)
-         (goto-char (marker-position marker))
-         ,@body))))
+     (org-with-point-at marker
+       ,@body)))
 
 
-;;;; Add entries to recently visited lists
+;;;; Recent lists
 
 (defvar org-hop-recent-headings-list nil
   "List of recently visited Org headings.")
@@ -424,7 +423,7 @@ With optional argument ARG, set list to nil."
   "Reset recent entries lists."
   (interactive)
   (setq org-hop-recent-headings-list nil)
-  (setq org-hop-recent-lines-list    nil))
+  (setq org-hop-recent-lines-list nil))
 
 (defun org-hop-reset-caches ()
   "Reset Org caches and rebuild `org-hop-headings-list'."
