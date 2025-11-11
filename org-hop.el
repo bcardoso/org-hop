@@ -109,6 +109,12 @@ This is relevant only when `org-hop-files-tiers-regexp-alist' is non-nil."
 See `org-hop-recent-mode'."
   :type 'integer)
 
+(defcustom org-hop-recent-max-entries nil
+  "The maximum number of recent entries to show in `org-hop-recent-mode'.
+Applies to `org-hop-recent-headings-list' and `org-hop-recent-lines-list'.
+If nil, always show all recent entries."
+  :type 'integer)
+
 (defcustom org-hop-push-to-mark-ring t
   "If non-nil, push current position into the mark ring before hop."
   :type 'boolean)
@@ -321,6 +327,18 @@ Optional argument OTHER-WINDOW selects the buffer in other window."
 (defvar org-hop-recent-lines-list nil
   "List of saved buffer lines.")
 
+(defun org-hop-recent-entries (type)
+  "Return the list of recent entries of TYPE."
+  (let ((recent-list (pcase type
+                       ('headings org-hop-recent-headings-list)
+                       ('lines org-hop-recent-lines-list))))
+    (if org-hop-recent-max-entries
+        (take org-hop-recent-max-entries recent-list)
+      recent-list)))
+
+
+;;;;; Add entries to recently visited lists
+
 (defmacro org-hop-add (entry recent-list)
   "Put ENTRY in the beginning of RECENT-LIST and remove dups."
   `(setq ,recent-list (cl-remove-duplicates
@@ -367,7 +385,7 @@ When idle, add current Org heading to `org-hop-recent-headings-list'."
     (cancel-function-timers #'org-hop-add-heading-to-list)))
 
 
-;;;; Remove entries from recent lists
+;;;;; Remove entries from recent lists
 
 (defmacro org-hop-remove (entry recent-list &optional verbose)
   "Remove an ENTRY from RECENT-LIST.
@@ -455,8 +473,8 @@ With a double prefix argument, run `org-hop-reset-caches'."
 With optional argument ARG, run `org-hop-reset', which see."
   (interactive "P")
   (org-hop-reset arg)
-  (let* ((headings (append org-hop-recent-headings-list
-                           org-hop-recent-lines-list
+  (let* ((headings (append (org-hop-recent-entries 'headings)
+                           (org-hop-recent-entries 'lines)
                            org-hop-headings-list))
          (entry (completing-read "Hop to: " headings)))
     (org-hop-to-entry (alist-get entry headings nil nil #'equal))))

@@ -53,13 +53,13 @@
 (defvar consult-org-hop--recent-headings-source
   (consult-org-hop-build-source
     "Recent Org headings" ?r 'org-heading
-    (lambda () (mapcar #'car org-hop-recent-headings-list)))
+    (lambda () (mapcar #'car (org-hop-recent-entries 'headings))))
   "Consult source for recent Org Headings.")
 
 (defvar consult-org-hop--recent-lines-source
   (consult-org-hop-build-source
     "Hop to line" ?l 'consult-location
-    (lambda () (mapcar #'car org-hop-recent-lines-list)))
+    (lambda () (mapcar #'car (org-hop-recent-entries 'lines))))
   "Consult source for saved lines.")
 
 (defcustom consult-org-hop-sources

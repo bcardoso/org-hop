@@ -313,17 +313,19 @@ CANDIDATES is the list of candidates."
      :candidates ,candidates))
 
 (defvar helm-org-hop-recent-headings-source
-  (helm-org-hop-build-recent-source "Recent Org headings"
-    helm-org-hop-recent-headings-actions
-    helm-org-hop-recent-headings-map
-    (lambda () org-hop-recent-headings-list))
+  (helm-org-hop-build-recent-source
+   "Recent Org headings"
+   helm-org-hop-recent-headings-actions
+   helm-org-hop-recent-headings-map
+   (lambda () (org-hop-recent-entries 'headings)))
   "Helm source for `org-hop-recent-headings-list'.")
 
 (defvar helm-org-hop-recent-lines-source
-  (helm-org-hop-build-recent-source "Hop to line"
-    helm-org-hop-recent-lines-actions
-    helm-org-hop-recent-lines-map
-    (lambda () org-hop-recent-lines-list))
+  (helm-org-hop-build-recent-source
+   "Hop to line"
+   helm-org-hop-recent-lines-actions
+   helm-org-hop-recent-lines-map
+   (lambda () (org-hop-recent-entries 'lines)))
   "Helm source for `org-hop-recent-lines-list'.")
 
 (defvar helm-org-hop-capture-source
