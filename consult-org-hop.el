@@ -112,6 +112,7 @@ With optional argument ARG, run `org-hop-reset', which see."
   (org-hop-reset arg)
   (consult--multi consult-org-hop-sources
                   :sort nil
+                  :history 'org-hop-history
                   :add-history (list (and (use-region-p)
                                           (buffer-substring-no-properties
                                            (region-beginning) (region-end)))

@@ -450,7 +450,7 @@ With optional argument ARG, set list to nil."
   (setq org-ql-tags-cache (make-hash-table :weakness 'key))
   (setq org-ql-node-value-cache (make-hash-table :weakness 'key))
   (org-persist-gc)
-  (org-hop-reset-recent-lists)
+  ;; (org-hop-reset-recent-lists)
   (setq org-hop-headings-list nil)
   (org-hop-headings-list-update)
   (message "[org-hop] Resetting caches... done"))
@@ -467,6 +467,8 @@ With a double prefix argument, run `org-hop-reset-caches'."
 
 ;;;; Commands
 
+(defvar org-hop-history nil "History list.")
+
 ;;;###autoload
 (defun org-hop (&optional arg)
   "Hop to a Org heading.
@@ -476,7 +478,8 @@ With optional argument ARG, run `org-hop-reset', which see."
   (let* ((headings (append (org-hop-recent-entries 'headings)
                            (org-hop-recent-entries 'lines)
                            org-hop-headings-list))
-         (entry (completing-read "Hop to: " headings)))
+         (entry (completing-read "Hop to: " headings
+                                 nil t nil 'org-hop-history)))
     (org-hop-to-entry (alist-get entry headings nil nil #'equal))))
 
 ;;;###autoload
@@ -487,7 +490,8 @@ When BUFFERS-FILES is a list of Org buffers or files, use it instead."
   (if (or buffers-files (derived-mode-p 'org-mode))
       (let* ((headings (org-hop-headings
                         :buffers-files (or buffers-files (current-buffer))))
-             (entry (completing-read "Hop to: " headings)))
+             (entry (completing-read "Hop to: " headings
+                                     nil t nil 'org-hop-history)))
         (org-hop-to-entry (alist-get entry headings nil nil #'equal)))
     (user-error "Not an Org buffer")))
 
